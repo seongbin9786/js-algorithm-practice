@@ -14,40 +14,34 @@
  * @return {number}
  */
 const trap = (height) => {
-  const heightRecords = [];
-
+  let sum = 0;
   let leftIdx = 0;
   let rightIdx = height.length - 1;
-  let maxPillarWeight = 0;
+  let maxLeftHeight = 0;
+  let maxRightHeight = 0;
 
   while (leftIdx < rightIdx) {
-    // calculate는 어떻게 함? 엄청 쉬움 높이가 더 낮은 칸은 다 더하면 됨
-    const leftHeight = height[leftIdx];
-    const rightHeight = height[rightIdx];
-    const pillarHeight = Math.min(leftHeight, rightHeight);
+    const curLeftHeight = height[leftIdx];
+    const curRightHeight = height[rightIdx];
 
-    // 이전과 높이가 같거나 낮은 경우는 고려하지 않음  
-    if (pillarHeight > maxPillarWeight) {
-      heightRecords.push([leftIdx, rightIdx, pillarHeight]);
-    }
-
-    if (leftHeight > rightHeight) {
-      rightIdx--;
-    } else {
+    // 둘이 같을 때는 둘 중 아무거나 해도 됨. 둘 다 한 칸씩만 전진함.
+    if (curLeftHeight < curRightHeight) {
+      // 일단 오른쪽 높이가 더 높으니, 왼쪽은 Max와 차이만 계산하면 된다.
+      if (curLeftHeight >= maxLeftHeight) { // max 갱신, 다음 블록부터는 새 max 기준으로 물을 넣으면 됨
+        maxLeftHeight = curLeftHeight;
+      } else {
+        sum += maxLeftHeight - curLeftHeight;
+      }
       leftIdx++;
-    }
-
-    maxPillarWeight = Math.max(maxPillarWeight, pillarHeight);
-  }
-
-  // 이 순회를 하면 안되나본데? 그런가보다.
-  const result = Array(height.length).fill(0);
-  for (const [leftIdx, rightIdx, pillarHeight] of heightRecords) {
-    for (let i = leftIdx + 1; i < rightIdx; i++) {
-      result[i] = Math.max(0, pillarHeight - height[i]);
+    } else {
+      // 왼쪽 높이가 더 높은 상황이므로, 오른쪽이 따라가야 함
+      if (curRightHeight > maxRightHeight) {
+        maxRightHeight = curRightHeight;
+      } else {
+        sum += maxRightHeight - curRightHeight;
+      }
+      rightIdx--;
     }
   }
-
-  // sum
-  return result.reduce((a, b) => a + b, 0);
+  return sum;
 };
