@@ -26,36 +26,34 @@
   1 / 2 = 0 ... 1
 
 */
-const countCharOfStr = (s, c) => [...s]
-  .filter(ch => ch === c)
-  .length;
+const countCharOfStr = (s, c) => [...s].filter((ch) => ch === c).length;
 
 const base10Tobase2 = (num) => {
-  const result = [];
-  while (num > 0) {
-    result.push(num % 2);
-    num = Math.floor(num / 2);
-  }
-  result.reverse();
-  return result.join('');
-}
+    const result = [];
+    while (num > 0) {
+        result.push(num % 2);
+        num = Math.floor(num / 2);
+    }
+    result.reverse();
+    return result.join("");
+};
 
 function solution(s) {
-  let numberOfConversion = 0;
-  let numberOfRemovedZeros = 0;
+    let numberOfConversion = 0;
+    let numberOfRemovedZeros = 0;
 
-  while (s !== '1') {
-    // 제거된 0 개수 세기
-    const ones = countCharOfStr(s, '1');
-    const removedZeros = s.length - ones;
-    numberOfRemovedZeros += removedZeros;
+    while (s !== "1") {
+        // 제거된 0 개수 세기
+        const ones = countCharOfStr(s, "1");
+        const removedZeros = s.length - ones;
+        numberOfRemovedZeros += removedZeros;
 
-    // 이진 변환하기
-    s = base10Tobase2(ones);
-    numberOfConversion++;
-  }
+        // 이진 변환하기
+        s = base10Tobase2(ones);
+        numberOfConversion++;
+    }
 
-  return [numberOfConversion, numberOfRemovedZeros];
+    return [numberOfConversion, numberOfRemovedZeros];
 }
 
 const result = solution("110010101001"); // [3,8]

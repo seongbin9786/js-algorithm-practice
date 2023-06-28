@@ -23,28 +23,30 @@
  * @return {number}
  */
 const maxArea = function (height) {
-  let leftIdx = 0;
-  let rightIdx = height.length - 1;
-  let maxWater = 0;
+    let leftIdx = 0;
+    let rightIdx = height.length - 1;
+    let maxWater = 0;
 
-  while (leftIdx < rightIdx) {
-    const left = height[leftIdx];
-    const right = height[rightIdx];
-    const localWater = (rightIdx - leftIdx) * Math.min(left, right);
-    maxWater = Math.max(maxWater, localWater);
+    while (leftIdx < rightIdx) {
+        const left = height[leftIdx];
+        const right = height[rightIdx];
+        const localWater = (rightIdx - leftIdx) * Math.min(left, right);
+        maxWater = Math.max(maxWater, localWater);
 
-    // 단순 Left, Right 비교보단, water 비교로해야 할 듯.
-    const nextLeft = height[leftIdx + 1];
-    const nextRight = height[rightIdx - 1];
-    const nextLeftLocalWater = (rightIdx - leftIdx - 1) * Math.min(nextLeft, right);
-    const nextRightLocalWater = (rightIdx - leftIdx - 1) * Math.min(left, nextRight);
-    if (nextLeftLocalWater > nextRightLocalWater) {
-      leftIdx++;
-    } else {
-      rightIdx--;
+        // 단순 Left, Right 비교보단, water 비교로해야 할 듯.
+        const nextLeft = height[leftIdx + 1];
+        const nextRight = height[rightIdx - 1];
+        const nextLeftLocalWater =
+            (rightIdx - leftIdx - 1) * Math.min(nextLeft, right);
+        const nextRightLocalWater =
+            (rightIdx - leftIdx - 1) * Math.min(left, nextRight);
+        if (nextLeftLocalWater > nextRightLocalWater) {
+            leftIdx++;
+        } else {
+            rightIdx--;
+        }
     }
-  }
-  return maxWater;
+    return maxWater;
 };
 
 console.log(maxArea([1, 3, 2, 5, 25, 24, 5]));

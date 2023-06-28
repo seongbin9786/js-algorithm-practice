@@ -56,54 +56,58 @@
  * @return {number[][]}
  */
 var threeSum = function (nums) {
-  const result = [];
+    const result = [];
 
-  // 1. 정렬해야 함
-  nums.sort((a, b) => a - b); // 오름차순 정렬
+    // 1. 정렬해야 함
+    nums.sort((a, b) => a - b); // 오름차순 정렬
 
-  // 2. 첫째 자리에 값 할당
-  for (let i = 0; i < nums.length; i++) {
+    // 2. 첫째 자리에 값 할당
+    for (let i = 0; i < nums.length; i++) {
+        // 2-1. [중복 방지] 첫째 자리 값이 이전 값과 동일하면,
+        //      둘째, 셋째가 동일한 조합이 만들어지므로 넘어가야 함.
+        if (i > 0 && nums[i] === nums[i - 1]) {
+            continue;
+        }
 
-    // 2-1. [중복 방지] 첫째 자리 값이 이전 값과 동일하면,
-    //      둘째, 셋째가 동일한 조합이 만들어지므로 넘어가야 함.
-    if (i > 0 && nums[i] === nums[i - 1]) {
-      continue;
+        // 3. 둘째, 셋째 원소 할당
+        let leftIdx = i + 1;
+        let rightIdx = nums.length - 1;
+        while (leftIdx < rightIdx) {
+            // 3-1. [중복 방지] 둘째, 셋째 자리 값 역시
+            //      이전 값과 동일하면 동일 조합이 나오게 되므로 넘어가야 함.
+            // 지금 여기서 문제가 발생함 ... 왜 중복 제거가 안 되지?
+            // --> if는 한 번만 하잖아요...
+            while (leftIdx > i + 1 && nums[leftIdx] === nums[leftIdx - 1]) {
+                leftIdx++;
+            }
+            while (
+                rightIdx < nums.length - 1 &&
+                nums[rightIdx] === nums[rightIdx + 1]
+            ) {
+                rightIdx--;
+            }
+
+            // 문제점: left < right 조건이 유지되지 않음...
+            if (leftIdx >= rightIdx) {
+                break;
+            }
+
+            const sum = nums[i] + nums[leftIdx] + nums[rightIdx];
+            if (sum === 0) {
+                result.push([nums[i], nums[leftIdx], nums[rightIdx]]);
+                leftIdx++;
+                rightIdx--;
+                // 가만히 있으면 무한 루프인데? 양쪽 다 바뀌어야 하나? 그렇지?
+            } else if (sum < 0) {
+                // 합이 더 커져야 함
+                leftIdx++;
+            } else {
+                // 합이 더 작아야 함.
+                rightIdx--;
+            }
+        }
     }
-
-    // 3. 둘째, 셋째 원소 할당
-    let leftIdx = i + 1;
-    let rightIdx = nums.length - 1;
-    while (leftIdx < rightIdx) {
-      // 3-1. [중복 방지] 둘째, 셋째 자리 값 역시 
-      //      이전 값과 동일하면 동일 조합이 나오게 되므로 넘어가야 함.
-      // 지금 여기서 문제가 발생함 ... 왜 중복 제거가 안 되지?
-      // --> if는 한 번만 하잖아요...
-      while (leftIdx > i + 1 && nums[leftIdx] === nums[leftIdx - 1]) {
-        leftIdx++;
-      }
-      while (rightIdx < nums.length - 1 && nums[rightIdx] === nums[rightIdx + 1]) {
-        rightIdx--;
-      }
-
-      // 문제점: left < right 조건이 유지되지 않음...
-      if (leftIdx >= rightIdx) {
-        break;
-      }
-
-      const sum = nums[i] + nums[leftIdx] + nums[rightIdx];
-      if (sum === 0) {
-        result.push([nums[i], nums[leftIdx], nums[rightIdx]]);
-        leftIdx++;
-        rightIdx--;
-        // 가만히 있으면 무한 루프인데? 양쪽 다 바뀌어야 하나? 그렇지?
-      } else if (sum < 0) { // 합이 더 커져야 함
-        leftIdx++;
-      } else { // 합이 더 작아야 함.
-        rightIdx--;
-      }
-    }
-  }
-  return result;
+    return result;
 };
 
 threeSum([-2, 0, 3, -1, 4, 0, 3, 4, 1, 1, 1, -3, -5, 4, 0]);

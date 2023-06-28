@@ -9,12 +9,12 @@ const prime = (num) => {
         }
     }
     return true;
-}
+};
 
 function solution(numbersString) {
     const numbers = [...numbersString];
-    const allCombinations = new Set(); 
-    
+    const allCombinations = new Set();
+
     // 1. 채워나갈 자리수를 기준으로 DFS를 하면 모든 가능한 순서로 만들어낼 수 있다.
     const visited = [...Array(numbers)].fill(false);
     const permutationDFS = (selected, idx, maxSize) => {
@@ -33,8 +33,8 @@ function solution(numbersString) {
             permutationDFS(selected + numbers[i], idx + 1, maxSize);
             visited[i] = false;
         }
-    }
-    
+    };
+
     // 2. 가능한 모든 숫자를 생성한다.
     // maxSize = 선택할 자리수 (2자리, 3자리, ...)
     for (let maxSize = 1; maxSize <= numbers.length; maxSize++) {

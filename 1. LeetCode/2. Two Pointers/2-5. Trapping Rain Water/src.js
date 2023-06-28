@@ -14,34 +14,35 @@
  * @return {number}
  */
 const trap = (height) => {
-  let sum = 0;
-  let leftIdx = 0;
-  let rightIdx = height.length - 1;
-  let maxLeftHeight = 0;
-  let maxRightHeight = 0;
+    let sum = 0;
+    let leftIdx = 0;
+    let rightIdx = height.length - 1;
+    let maxLeftHeight = 0;
+    let maxRightHeight = 0;
 
-  while (leftIdx < rightIdx) {
-    const curLeftHeight = height[leftIdx];
-    const curRightHeight = height[rightIdx];
+    while (leftIdx < rightIdx) {
+        const curLeftHeight = height[leftIdx];
+        const curRightHeight = height[rightIdx];
 
-    // 둘이 같을 때는 둘 중 아무거나 해도 됨. 둘 다 한 칸씩만 전진함.
-    if (curLeftHeight < curRightHeight) {
-      // 일단 오른쪽 높이가 더 높으니, 왼쪽은 Max와 차이만 계산하면 된다.
-      if (curLeftHeight >= maxLeftHeight) { // max 갱신, 다음 블록부터는 새 max 기준으로 물을 넣으면 됨
-        maxLeftHeight = curLeftHeight;
-      } else {
-        sum += maxLeftHeight - curLeftHeight;
-      }
-      leftIdx++;
-    } else {
-      // 왼쪽 높이가 더 높은 상황이므로, 오른쪽이 따라가야 함
-      if (curRightHeight > maxRightHeight) {
-        maxRightHeight = curRightHeight;
-      } else {
-        sum += maxRightHeight - curRightHeight;
-      }
-      rightIdx--;
+        // 둘이 같을 때는 둘 중 아무거나 해도 됨. 둘 다 한 칸씩만 전진함.
+        if (curLeftHeight < curRightHeight) {
+            // 일단 오른쪽 높이가 더 높으니, 왼쪽은 Max와 차이만 계산하면 된다.
+            if (curLeftHeight >= maxLeftHeight) {
+                // max 갱신, 다음 블록부터는 새 max 기준으로 물을 넣으면 됨
+                maxLeftHeight = curLeftHeight;
+            } else {
+                sum += maxLeftHeight - curLeftHeight;
+            }
+            leftIdx++;
+        } else {
+            // 왼쪽 높이가 더 높은 상황이므로, 오른쪽이 따라가야 함
+            if (curRightHeight > maxRightHeight) {
+                maxRightHeight = curRightHeight;
+            } else {
+                sum += maxRightHeight - curRightHeight;
+            }
+            rightIdx--;
+        }
     }
-  }
-  return sum;
+    return sum;
 };

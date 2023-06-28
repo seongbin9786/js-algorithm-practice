@@ -17,64 +17,64 @@
 
 */
 const sliceStringBySize = (str, sliceSize) => {
-  const result = [];
+    const result = [];
 
-  for (let pos = 0; pos < str.length; pos += sliceSize) {
-    if (pos + sliceSize > str.length) {
-      // 남은 길이가 부족해 남은 부분만큼을 모두 잘라냄
-      result.push(str.slice(pos, str.length));
-      break;
+    for (let pos = 0; pos < str.length; pos += sliceSize) {
+        if (pos + sliceSize > str.length) {
+            // 남은 길이가 부족해 남은 부분만큼을 모두 잘라냄
+            result.push(str.slice(pos, str.length));
+            break;
+        }
+        result.push(str.slice(pos, pos + sliceSize));
     }
-    result.push(str.slice(pos, pos + sliceSize));
-  }
 
-  return result;
-}
+    return result;
+};
 
 const compress = (slices) => {
-  const [firstSlice, ...restSlices] = slices;
-  let result = 0;
+    const [firstSlice, ...restSlices] = slices;
+    let result = 0;
 
-  let duplicates = 1; // 
-  let prevSlice = firstSlice;
-  for (const slice of restSlices) {
-    // 이전 slice와 일치하면 단순 증가만 수행
-    if (prevSlice === slice) {
-      duplicates++;
-      continue;
+    let duplicates = 1; //
+    let prevSlice = firstSlice;
+    for (const slice of restSlices) {
+        // 이전 slice와 일치하면 단순 증가만 수행
+        if (prevSlice === slice) {
+            duplicates++;
+            continue;
+        }
+        // 이전 slice의 중복 분량을 최종 길이에 반영함
+        result += prevSlice.length;
+        if (duplicates > 1) {
+            result += (duplicates + "").length;
+        }
+
+        // 새로운 slice의 시작
+        duplicates = 1;
+        prevSlice = slice;
     }
-    // 이전 slice의 중복 분량을 최종 길이에 반영함
+
+    // 최종 slice는 더해지지 않고 종료됨
     result += prevSlice.length;
+
+    // 마지막 slice까지 중복인 경우 정산을 못하고 루프가 종료됨
     if (duplicates > 1) {
-      result += (duplicates + '').length;
+        result += (duplicates + "").length;
     }
 
-    // 새로운 slice의 시작
-    duplicates = 1;
-    prevSlice = slice;
-  }
-
-  // 최종 slice는 더해지지 않고 종료됨
-  result += prevSlice.length;
-
-  // 마지막 slice까지 중복인 경우 정산을 못하고 루프가 종료됨
-  if (duplicates > 1) {
-    result += (duplicates + '').length;
-  }
-
-  return result;
-}
+    return result;
+};
 
 function solution(s) {
-  let answer = 1001;
+    let answer = 1001;
 
-  for (let sliceSize = 1; sliceSize <= s.length; sliceSize++) {
-    const slices = sliceStringBySize(s, sliceSize);
-    const compressedSize = compress(slices);
-    answer = Math.min(answer, compressedSize);
-  }
+    for (let sliceSize = 1; sliceSize <= s.length; sliceSize++) {
+        const slices = sliceStringBySize(s, sliceSize);
+        const compressedSize = compress(slices);
+        answer = Math.min(answer, compressedSize);
+    }
 
-  return answer;
+    return answer;
 }
 
 const result = solution("xababcdcdababcdcd");

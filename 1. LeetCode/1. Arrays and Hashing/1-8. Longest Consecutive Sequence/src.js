@@ -46,43 +46,43 @@
  * @return {number}
  */
 const longestConsecutive = function (nums) {
-  const visitedMap = new Map();
-  for (const num of nums) {
-    if (!visitedMap.has(num)) {
-      visitedMap.set(num, false);
-    }
-  }
-
-  let maxLength = 0;
-
-  for (const startingInteger of nums) {
-    const visited = visitedMap.get(startingInteger);
-    if (visited) {
-      continue;
-    }
-    let length = 1; // startingInteger의 몫
-
-    // 위쪽부터 쭉 방문
-    let nextInteger = startingInteger + 1;
-    while (visitedMap.get(nextInteger) === false) {
-      visitedMap.set(nextInteger, true);
-      length++;
-      nextInteger++;
+    const visitedMap = new Map();
+    for (const num of nums) {
+        if (!visitedMap.has(num)) {
+            visitedMap.set(num, false);
+        }
     }
 
-    // 아래쪽 쭉 방문
-    let prevInteger = startingInteger - 1;
-    while (visitedMap.get(prevInteger) === false) {
-      visitedMap.set(prevInteger, true);
-      length++;
-      prevInteger--;
-    }
+    let maxLength = 0;
 
-    if (maxLength < length) {
-      maxLength = length;
+    for (const startingInteger of nums) {
+        const visited = visitedMap.get(startingInteger);
+        if (visited) {
+            continue;
+        }
+        let length = 1; // startingInteger의 몫
+
+        // 위쪽부터 쭉 방문
+        let nextInteger = startingInteger + 1;
+        while (visitedMap.get(nextInteger) === false) {
+            visitedMap.set(nextInteger, true);
+            length++;
+            nextInteger++;
+        }
+
+        // 아래쪽 쭉 방문
+        let prevInteger = startingInteger - 1;
+        while (visitedMap.get(prevInteger) === false) {
+            visitedMap.set(prevInteger, true);
+            length++;
+            prevInteger--;
+        }
+
+        if (maxLength < length) {
+            maxLength = length;
+        }
     }
-  }
-  return maxLength;
+    return maxLength;
 };
 
 longestConsecutive([100, 4, 200, 1, 3, 2]);
