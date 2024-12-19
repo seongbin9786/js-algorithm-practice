@@ -266,20 +266,116 @@ XX P2
 -   위처럼 되어 있으면, P2는 visited=true가 되므로, P2의 우측을 체크할 수 없게 된다.
 
 -   그럼 나머지 10.8에 해당하는 case들은 뭐가 있을까?
--   일단 일부 Case를 빼먹는 단순한 실수가 있을지 확인해보았다.
--   일단 좌표는 모두 맞다. SIZE=5도 맞다.
--   대각선 사이 2좌표에 대한 safe 체크는 대각선이 safe하면 된다고 생각했는데, 아닐 수도 있을까? 그럴 수는 없다.
+
+    -   일단 일부 Case를 빼먹는 단순한 실수가 있을지 확인해보았다.
+    -   일단 좌표는 모두 맞다. SIZE=5도 맞다.
+    -   대각선 사이 2좌표에 대한 safe 체크는 대각선이 safe하면 된다고 생각했는데, 아닐 수도 있을까? 그럴 수는 없다.
+
 -   뭘 빠트린 걸까? 아무 생각이 나지 않아서, 예전에 내가 쓴 답을 확인했다.
--   답을 확인해도 잘 모르겠다! 어떤 부분을 실수한 것 같은데, 다음에 다시 확인하고자 한다.
+    -   답을 확인해도 잘 모르겠다! 어떤 부분을 실수한 것 같은데, 다음에 다시 확인하고자 한다.
 
-#### 5-4. 최종 수도 코드
+#### 5-4. 재확인
 
-(TBD)
+-   다음 조건을 잘 지키고 있는지 재확인한다.
+    -   P와 한 칸 인접한 칸에 다른 P가 있다면 무조건 탈락이다.
+    -   P 상의 대각선 칸에 다른 P가 있다면 두 칸 사이에 파티션이 2개 있어야 한다.
 
-#### 5-5. 완성 코드
+```text
+P1 -- P2
+-- PP --
+P3 -- P4
+```
+
+-   누락된 조건: 두 칸 인접한 칸까지 찾아야 한다.
+    -   아래와 같은 경우, P1, P2의 거리는 2이지만 거리두기 규칙 위반이다.
+
+```text
+P1 -- --
+OO -- --
+PP OO P2
+```
+
+#### 5-5. 추가 최적화
+
+-   번외지만, 대각선 사이의 좌표를 굳이 둘 필요가 없다. `(targetY, x), (y, targetX)` 좌표를 사용하면 된다.
+
+#### 5-6. 최종 수도 코드
+
+1. 편의를 위해 문자열의 1차원 배열을 단위 문자의 2차원 배열로 변환한다.
+2. 각 칸에 대해 순회하면서, P 주변의 칸을 확인한다. 각 칸을 확인할 때는 범위 필터링을 거친다.
+3. P인 경우 동서남북 상 두 칸을 확인한다. 즉시 P 혹은 O-P 순으로 나온다면 실패
+4. 대각선 4칸 범위에서 P가 나오면 사이 2칸이 둘 다 X가 아니라면 실패
+5. (1~4)을 전체 대기실 배열에 대해 수행한 후 결과를 반환한다.
+
+#### 5-7. 완성 코드
 
 ```js
-const solution = () => {
-    // TBD
+const SIZE = 5;
+
+const dy = [0, 0, -1, 1];
+const dx = [1, -1, 0, 0];
+
+const ddy = [-1, -1, 1, 1];
+const ddx = [-1, 1, -1, 1];
+
+const isSafeAxis = (p) => p >= 0 && p < SIZE;
+const isSafePos = (y, x) => isSafeAxis(y) && isSafeAxis(x);
+
+const checkPlace = (place) => {
+    for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+            if (place[y][x] !== "P") {
+                continue;
+            }
+
+            // 1. 동서남북 확인
+            for (let i = 0; i < 4; i++) {
+                const ny = y + dy[i];
+                const nx = x + dx[i];
+                if (!isSafePos(ny, nx)) {
+                    continue;
+                }
+                if (place[ny][nx] === "P") {
+                    return false;
+                }
+                if (place[ny][nx] === "O") {
+                    const ny = y + dy[i] * 2;
+                    const nx = x + dx[i] * 2;
+                    if (!isSafePos(ny, nx)) {
+                        continue;
+                    }
+                    if (place[ny][nx] === "P") {
+                        return false;
+                    }
+                }
+            }
+
+            // 2. 대각선 확인
+            for (let i = 0; i < 4; i++) {
+                const ny = y + ddy[i];
+                const nx = x + ddx[i];
+                if (!isSafePos(ny, nx)) {
+                    continue;
+                }
+                if (place[ny][nx] !== "P") {
+                    continue;
+                }
+                if (place[ny][x] !== "X") {
+                    return false;
+                }
+                if (place[y][nx] !== "X") {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+};
+
+const solution = (rawPlaces) => {
+    const places = rawPlaces.map((place) => place.map((row) => [...row]));
+
+    return places.map(checkPlace).map((result) => (result ? 1 : 0));
 };
 ```
