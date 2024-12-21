@@ -29,17 +29,56 @@
 
 #### 1-1 [접근 1]
 
--   인용 횟수 배열을 내림차순 정렬한다.
--   index+1 === value인 경우 그 값을 반환한다.
--   (ex) `[6,6,6,6,6,6,...]`이면 6번째 6일 때 i=5, value=6이므로, H-Index=6
--   이 조건에 맞는 값을 찾는 즉시 반환하면 된다.
+-   내림차순 정렬 후, 논문을 순회하면서, 현재 논문의 인용 횟수보다 hIndex가 작은 경우, hIndex를 1씩 증가시킨다.
+-   만약 hIndex보다 현재의 논문 인용 횟수가 작거나 같다면, hIndex가 최대점이므로 반환한다.
+
+##### 예시 1
+
+```text
+value:  10, 9, 8, 7, 6, 4, 3, 2, 1
+h-index: 1, 2, 3, 4, 5, -, -, -, -
+```
+
+-   (value=6, h-index=5)까지만 보고 H-index = 5라고 단정지을 수 없다.
+-   이후 6이 나오면, h-index=6이 된다.
+-   만약 다음 값의 value가 5이하이면 종료하면 된다.
+
+##### 예시 2
+
+```text
+value:  10, 9, 8, 7, 6, 6, ?
+h-index: 1, 2, 3, 4, 5, 6, -
+```
+
+##### 예시 3
+
+```text
+value:  10, 9, 8, 7, 7, 7, 7, 7
+h-index: 1, 2, 3, 4, 5, 6, 7, -
+```
+
+##### 예시 4
+
+```text
+value:  10, 6, 5, 2, 1
+h-index: 1, 2, 3, -, -
+```
+
+##### 예시 5
+
+```text
+value:  10, 1
+h-index: 1, -
+```
 
 #### 1-2. [접근 1에 대한 추가 확인]
+
+-   없음
 
 ### 2. 수도 코드
 
 1. 배열을 내림차순 정렬한다.
-2. 배열을 순회하면서 index+1 === value인 value를 찾아 반환한다.
+2. 배열을 순회하면서 현재 값이 hIndex보다 크거나 같은 경우 hIndex를 증가시키고, 만약 이전 hIndex가 현재 값보다 크거나 같은 경우 반환한다.
 
 ### 3. 사용 단위 알고리즘 종류
 
@@ -51,84 +90,31 @@
 
 ### 5. 단위 알고리즘 활용 코드
 
-#### 5-1. 첫 시도 코드
-
 ```js
-const solution = (citations) => {
-    return citations
-        .sort((a, b) => b - a)
-        .find((value, index) => value === index + 1);
-};
-```
-
--   예시 TC는 통과했지만 실제 TC는 모두 실패했다.
-
--   "나머지 논문의 인용 횟수는 그 이하이어야 한다" 조건은 자동으로 만족된다고 생각했는데 아닌 듯하다.
--   [9,8,7,6,5,4,3,2,1] 이면? h=5
--   [5,5,5,5] 이면? h=4
--   위 코드의 문제는 순서 = 값일 때만 동작한다는 점이다.
--   순서 != 값일 때도 구할 수 있어야 한다.
--   (ex) [10, 5, 4, 1, 0] 이면 h = 4 가 아니라 h = 3 이어야 한다.
--   즉 10, 5, 4, 일 때 h=3임은 확인 가능해야 한다.
--   index 기반으로 횟수를 계속 세면 된다.
-
-#### 5-2. 두 번째 시도 코드
-
--   동일하게 전체 TC가 실패했다.
--   `value <= index + 1`이면 잘 동작할 것이라고 생각했다.
-
-```js
-const solution = (citations) => {
-    return (
-        citations
-            .sort((a, b) => b - a)
-            .findIndex((value, index) => value <= index + 1) + 1
-    );
-};
-```
-
-#### 5-3. 세 번째 시도 코드
-
--   동일하게 전체 TC가 실패했다.
--   예시 TC에 `[9, 8, 7, 6, 2, 2, 2, 2, 2]`를 추가했다.
--   로그를 찍어보니 value <= index+1인 시점이 실제 시점보다 1 커서, findIndex + 1에서 +1을 제거했다.
-
-```text
-value index
-9 0
-8 1
-7 2
-6 3 <-- 정상 h 값 시점
-2 4 <-- 인식 문제
-```
-
--   그랬더니 기본 TC에서 오답이 났다. (`실행한 결괏값 2이 기댓값 3과 다릅니다.`)
-
-```text
-6 0
-5 1
-3 2
-```
-
--   이 경우에는 h=3이어야 하는데, index=2이므로 문제가 된다.
-
--   경계를 설정하는 조건이 많이 복잡하다고 느껴져서 findIndex를 쓰지 않기로 했다.
--   filter로 유효한 h 값을 만족하는 요소들만 구한다음, 그 개수를 반환하면 된다고 생각해 코드를 바꿨다.
-
-```js
-const solution = (citations) => {
-    return citations
-        .sort((a, b) => b - a)
-        .filter((value, index) => value >= index + 1).length;
+const solution = (rawCitations) => {
+    const citations = rawCitations.sort((a, b) => b - a);
 };
 ```
 
 #### 5-3. 완성 코드
 
 ```js
-const solution = (citations) => {
-    return citations
-        .sort((a, b) => b - a)
-        .filter((value, index) => value >= index + 1).length;
+const solution = (rawCitations) => {
+    const citations = rawCitations.sort((a, b) => b - a);
+    let hIndex = 0; // 기본 값 0
+    for (let index = 0; index < citations.length; index++) {
+        if (hIndex >= value) {
+            break;
+        }
+        hIndex++;
+    }
+
+    return hIndex;
 };
 ```
+
+### 6. 배운 점
+
+-   해결보다는 예시 TC를 만족하는 코드를 작성하려고 했다.
+    -   반례를 찾는 노력이 필요했다.
+    -   예시 TC가 하나 뿐이었고 허술했기 때문에, 커스텀 TC를 추가해야 했다.
