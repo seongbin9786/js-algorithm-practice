@@ -1,7 +1,11 @@
 // TODO: MaxHeap
 // TODO: 중복도 되게
-class MinHeap {
+export class MinHeap {
     items = [undefined];
+
+    isEmpty() {
+        return this.items.length === 1;
+    }
 
     push(item) {
         this.items.push(item);
