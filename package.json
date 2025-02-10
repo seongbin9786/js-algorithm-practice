@@ -1,0 +1,17 @@
+{
+    "name": "js-algorithm-practice",
+    "type": "module",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "vitest"
+    },
+    "keywords": [],
+    "author": "seongbin",
+    "license": "ISC",
+    "dependencies": {
+        "jest": "^29.7.0",
+        "vitest": "^3.0.5"
+    }
+}
