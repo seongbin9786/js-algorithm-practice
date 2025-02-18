@@ -32,7 +32,7 @@
         - 최초로 발견된 부모에 할당하면 된다.
 - 이진트리 구축이 끝나면 후위순회 후 종료하면 된다.
 
-[19:18 실패]
+[실패] (19:18)
 - 기본 TC 통과
 - 31점
 - 틀린 이유: x 범위를 모든 조상으로부터 물려받아야 함
@@ -41,13 +41,14 @@
     - 알고리즘이 아닌데 연상이 안 되네
     - parent만 참조하면 안 됨. 뭔가 누적이 되는 형상이어야 함.
 
+[해결 완료]
+- parent가 아니라 min/max X 범위만 물려받으면 됨.
 
 */
 class Node {
     id;
     x;
     y;
-    parent = undefined;
     left = undefined;
     right = undefined;
     minX = -Infinity;
@@ -61,16 +62,12 @@ class Node {
 
     setLeft(child) {
         this.left = child;
-        child.parent = this;
-
         child.maxX = this.x;
         child.minX = this.minX;
     }
 
     setRight(child) {
         this.right = child;
-        child.parent = this;
-
         child.minX = this.x;
         // child.maxX = this.parent.x; 로 불충분함
         // 할아버지의 x를 쓸 게 아니라, 어차피 그건 내 maxX 이므로, 내 걸 써야 함.
