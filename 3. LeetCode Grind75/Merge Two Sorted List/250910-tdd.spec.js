@@ -197,8 +197,23 @@ describe("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    // 이건 여전히 안되네...
-    it("[0,1,2,4,7,10,10] + [3,5,6,8,9,9] = [0,1,2,3,4,5,6,7,8,9,9,10,10]", () => {
+    it("[1,4] + [2,3] = [1,2,3,4]", () => {
+        const expected = stringifyList(parseList("1,2,3,4"));
+        const list1 = parseList("1,4");
+        const list2 = parseList("2,3");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    it.skip("[7,10,10] + [8,9,9] = [7,8,9,9,10,10]", () => {
+        const expected = stringifyList(parseList("7,8,8,9,9,10,10"));
+        const list1 = parseList("7,10,10");
+        const list2 = parseList("8,9,9");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    it.skip("[0,1,2,4,7,10,10] + [3,5,6,8,9,9] = [0,1,2,3,4,5,6,7,8,9,9,10,10]", () => {
         const expected = stringifyList(
             parseList("0,1,2,3,4,5,6,7,8,9,9,10,10")
         );
@@ -209,13 +224,20 @@ describe("Merge Two Sorted Lists", () => {
     });
 });
 
-/*
-    1[1,2] -> 2[3,4] -> 1[5] -> 2[6]
-    head = list1 (1)
+// 머리가 안 좋으니깐, 조금씩만 바꾸고 테스트 돌려봐야 함. 이것이 바로 지혜다.
+// 막힌 CASE에서는 조금 더 작게 오류를 발생시키는 TC를 찾아야, 해결 방법도 간단함..
+// TC를 최대한 좁혀서 오류를 만들어내고, 이후 TC를 넓혀가며 원본 TC 동작을 확인하기
 
-    list1: [[1]->[2]->[5]], list2: [[3]->[4]->[6]]
-    list1: [[2]->[5]], list2: [[3]->[4]->[6]]
-    list1: [[5]], list2: [[4]->[6]]
+/*
+    [1,4] + [2,3] = [1,2,3,4]
+
+    1
+    2,3
+    4
+    이어야 하는데,
+    1,2,4가 나옴
+
+    흠.. 코드가 복잡해짐
 */
 var mergeTwoLists = function (list1, list2) {
     if (!list1 || !list2) return list1 ?? list2;
@@ -223,43 +245,59 @@ var mergeTwoLists = function (list1, list2) {
     const head = list1.val <= list2.val ? list1 : list2;
 
     while (list1 && list2) {
-        const list1Next = list1.next;
-        const list2Next = list2.next;
         console.log(
-            `list1: [${showLinkes(list1)}], list2: [${showLinkes(list2)}]`
+            `list1: [${showLinkes(list1)}], list2: [${showLinkes(
+                list2
+            )}], head: [${showLinkes(head)}]`
         );
 
-        // 머리가 안 좋으니깐, 조금씩만 바꾸고 테스트 돌려봐야 함. 이것이 바로 지혜다.
         if (list1.val <= list2.val) {
             if (list1.next && list1.next.val < list2.val) {
                 while (list1.next && list1.next.val < list2.val) {
                     list1 = list1.next; // [1,2,5] 중 [2]까지만 이동. [5]가 되면 난처함.
+                    console.log(`list1 -> list1.next: ${list1?.val}`);
                 }
                 const list1Next = list1.next;
                 list1.next = list2; // head를 잇기 위해 list1->list2를 이어줌. ([1,2] -> [3,4,6])
                 list1 = list1Next; // list1은 [5]로 이동함.
+                console.log(
+                    `[loop] list1: ${list1?.val} / list2: ${list2?.val}`
+                );
                 continue;
             }
 
-            list1.next = list2;
+            const list1Next = list1.next; // 10->10
+            list1.next = list2; // 7->[8-9-9] (head 상황)
 
+            const list2Next = list2.next; // 9->9
             if (list1Next) {
+                // list2=[8]인데, list1Next=[10->10]을 달게 됨. 문제는 8->9->9 라서, 9->9가 사라지게 됨.
+                // HOW TO FIX: 10->10을 달기 전에, 그보다 작은 값이 있다면 fast-forward 해줘야 할까? 맞긴한듯?
+                // 이렇게 그냥 붙이는 건 기본값임.
+                // 이번 경우는 분기를 해줘야 함.
                 list2.next = list1Next;
             }
-            list1 = list1Next;
-            list2 = list2Next;
+            list1 = list1Next; // 10->10
+            list2 = list2Next; // 9->9 <-- 이걸 안 하면 되긴 함. / 안 할 수는 없네...
         } else {
             if (list2.next && list2.next.val < list1.val) {
                 while (list2.next && list2.next.val < list1.val) {
-                    list2 = list2.next; // [3,4,6] 중 [4]까지만 이동.
+                    list2 = list2.next;
+                    console.log(`list2 -> list2.next: ${list2?.val}`);
                 }
-                const list2Next = list2.next;
-                list2.next = list1;
+                const list2Next = list2.next; // undef
+                list2.next = list1; // [9->9]->[10->10]
                 list2 = list2Next;
+                console.log(
+                    `[loop2] list1: ${list1?.val} / list2: ${list2?.val}`
+                );
                 continue;
             }
 
+            const list2Next = list2.next;
             list2.next = list1;
+
+            const list1Next = list1.next;
             if (list2Next) {
                 list1.next = list2Next;
             }
