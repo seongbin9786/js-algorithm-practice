@@ -7,7 +7,7 @@ function ListNode(val, next) {
 }
 
 function parseList(str) {
-    const nodes = str.split(",").map((val) => new ListNode(val));
+    const nodes = str.split(",").map((val) => new ListNode(Number(val)));
     if (nodes.length === 0) return new ListNode();
 
     for (let i = 0; i < nodes.length - 1; i++) {
