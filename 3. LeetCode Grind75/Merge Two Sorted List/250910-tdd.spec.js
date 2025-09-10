@@ -134,6 +134,20 @@ describe.only("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
+    it("[0] + [0] = [0,0]", () => {
+        /*
+        뒤에 [0]이 안나옴.
+        구현 방법:
+        둘이 값이 같은 경우에, head 순서와 그 아래 분기가 달라서 반대편 리스트에 append가 되어서, 조건을 일치시켜줌 (그동안 반대였음)
+        const head = list1.val <= list2.val ? list1 : list2;
+        */
+        const expected = stringifyList(parseList("0,0"));
+        const list1 = parseList("0");
+        const list2 = parseList("0");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
     it("[0,0] + [0,0] = [0,0,0,0]", () => {
         const expected = stringifyList(parseList("0,0,0,0"));
         const list1 = parseList("0,0");
@@ -142,10 +156,29 @@ describe.only("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    it.skip("[1,3] + [2,4] = [1,2,3,4]", () => {
+    it("[1,3] + [2,4] = [1,2,3,4]", () => {
         const expected = stringifyList(parseList("1,2,3,4"));
         const list1 = parseList("1,3");
         const list2 = parseList("2,4");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    it("[1,2,3,4,5] + [2,3,4,5,6] = [1,2,2,3,3,4,4,5,5,6]", () => {
+        const expected = stringifyList(parseList("1,2,2,3,3,4,4,5,5,6"));
+        const list1 = parseList("1,2,3,4,5");
+        const list2 = parseList("2,3,4,5,6");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    // 전송 후 틀린 TC
+    it("[-10,-9,-6,-4,1,9,9] + [-5,-3,0,7,8,8] = [-10,-9,-6,-5,-4,-3,0,1,7,8,8,9,9]", () => {
+        const expected = stringifyList(
+            parseList("-10,-9,-6,-5,-4,-3,0,1,7,8,8,9,9")
+        );
+        const list1 = parseList("-10,-9,-6,-4,1,9,9");
+        const list2 = parseList("-5,-3,0,7,8,8");
         const result = mergeTwoLists(list1, list2);
         assert.equal(stringifyList(result), expected);
     });
@@ -154,10 +187,8 @@ describe.only("Merge Two Sorted Lists", () => {
 var mergeTwoLists = function (list1, list2) {
     if (!list1 || !list2) return list1 ?? list2;
 
-    const head = list1.val >= list2.val ? list2 : list1;
+    const head = list1.val <= list2.val ? list1 : list2;
 
-    // [0,0] + [0,0] = [0,0,0,0]
-    // [0,0,0,0]이 나와야 하는데 뒤에 [0]이 안 나옴.
     while (list1 && list2) {
         const list1Next = list1.next;
         const list2Next = list2.next;
