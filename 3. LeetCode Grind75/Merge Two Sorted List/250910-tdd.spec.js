@@ -197,6 +197,10 @@ describe("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
+    // [1,3] + [2,4] = [1,2,3,4] 과는 또 다른 게 참 어렵다는 생각이 듬
+    // 애초에 구현 전략을 뇌를 썼어야 하는 거 같음.
+    // 어쩌면 진작에 고려했어야 할 TC임
+    // 문제에 대한 이해도가 낮음을 느낌.
     it("[1,4] + [2,3] = [1,2,3,4]", () => {
         const expected = stringifyList(parseList("1,2,3,4"));
         const list1 = parseList("1,4");
@@ -205,7 +209,17 @@ describe("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    it.skip("[7,10,10] + [8,9,9] = [7,8,9,9,10,10]", () => {
+    // 반대 TC도 넣어봤더니 안 됨. 역시 패치 필요
+    it("[2,3] + [1,4] = [1,2,3,4]", () => {
+        const expected = stringifyList(parseList("1,2,3,4"));
+        const list1 = parseList("2,3");
+        const list2 = parseList("1,4");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    // 위 TC랑 다르게 또 안 됨...
+    it.only("[7,10,10] + [8,9,9] = [7,8,9,9,10,10]", () => {
         const expected = stringifyList(parseList("7,8,8,9,9,10,10"));
         const list1 = parseList("7,10,10");
         const list2 = parseList("8,9,9");
@@ -251,42 +265,50 @@ var mergeTwoLists = function (list1, list2) {
             )}], head: [${showLinkes(head)}]`
         );
 
+        // 1 vs 2
         if (list1.val <= list2.val) {
+            // 4 vs 3 ... X
             if (list1.next && list1.next.val < list2.val) {
                 while (list1.next && list1.next.val < list2.val) {
-                    list1 = list1.next; // [1,2,5] 중 [2]까지만 이동. [5]가 되면 난처함.
+                    list1 = list1.next;
                     console.log(`list1 -> list1.next: ${list1?.val}`);
                 }
                 const list1Next = list1.next;
-                list1.next = list2; // head를 잇기 위해 list1->list2를 이어줌. ([1,2] -> [3,4,6])
-                list1 = list1Next; // list1은 [5]로 이동함.
+                list1.next = list2;
+                list1 = list1Next;
                 console.log(
                     `[loop] list1: ${list1?.val} / list2: ${list2?.val}`
                 );
                 continue;
             }
 
-            const list1Next = list1.next; // 10->10
-            list1.next = list2; // 7->[8-9-9] (head 상황)
+            // [1,4], [2,3]
+            const list1Next = list1.next;
+            // 1->2 (문제 없음)
+            list1.next = list2;
+            // 여기서 forward할 수밖에 없음.
+            // 됨!
+            // 흠.. 근데 list2Next도 forward해야 하지 않음? 아래에서 하네. 굳.
+            while (list2.next && list2.next.val < list1Next.val) {
+                list2 = list2.next;
+            }
 
-            const list2Next = list2.next; // 9->9
+            const list2Next = list2.next;
             if (list1Next) {
-                // list2=[8]인데, list1Next=[10->10]을 달게 됨. 문제는 8->9->9 라서, 9->9가 사라지게 됨.
-                // HOW TO FIX: 10->10을 달기 전에, 그보다 작은 값이 있다면 fast-forward 해줘야 할까? 맞긴한듯?
-                // 이렇게 그냥 붙이는 건 기본값임.
-                // 이번 경우는 분기를 해줘야 함.
+                // 2->4 (3이 제거되는 순간)
+                // 이 구문이 빠질 순 없음. [2,3]을 다 forward해야 함.
                 list2.next = list1Next;
             }
-            list1 = list1Next; // 10->10
-            list2 = list2Next; // 9->9 <-- 이걸 안 하면 되긴 함. / 안 할 수는 없네...
+            list1 = list1Next;
+            list2 = list2Next;
         } else {
             if (list2.next && list2.next.val < list1.val) {
                 while (list2.next && list2.next.val < list1.val) {
                     list2 = list2.next;
                     console.log(`list2 -> list2.next: ${list2?.val}`);
                 }
-                const list2Next = list2.next; // undef
-                list2.next = list1; // [9->9]->[10->10]
+                const list2Next = list2.next;
+                list2.next = list1;
                 list2 = list2Next;
                 console.log(
                     `[loop2] list1: ${list1?.val} / list2: ${list2?.val}`
@@ -297,6 +319,9 @@ var mergeTwoLists = function (list1, list2) {
             const list2Next = list2.next;
             list2.next = list1;
 
+            while (list1.next && list1.next.val < list2Next.val) {
+                list1 = list1.next;
+            }
             const list1Next = list1.next;
             if (list2Next) {
                 list1.next = list2Next;
