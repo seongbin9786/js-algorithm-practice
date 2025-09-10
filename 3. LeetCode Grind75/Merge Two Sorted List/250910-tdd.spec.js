@@ -237,10 +237,36 @@ describe("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    it.only("[-10,-10,-9,-4,1,6,6] + [-7] = [7,8,9,9,10,10]", () => {
-        const expected = stringifyList(parseList("-10,-10,-9,-7,-4,1,6,6"));
-        const list1 = parseList("-10,-10,-9,-4,1,6,6");
-        const list2 = parseList("-7");
+    /*
+    list1: [[1]->[2]->[4]->[5]], list2: [[3]], head: [[1]->[2]->[4]->[5]]
+    list1 -> list1.next: 2
+    [loop] list1: 4 / list2: 3
+    list1: [[4]->[5]], list2: [[3]], head: [[1]->[2]->[3]]
+    */
+    it("[1,2,4,5] + [3] = [1,2,3,4,5]", () => {
+        const expected = stringifyList(parseList("1,2,3,4,5"));
+        const list1 = parseList("1,2,4,5");
+        const list2 = parseList("3");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    // 예외가 영원히 발생한다... why?
+    /*
+        list1: [[1]->[2]->[3]], list2: [[0]->[2]->[4]], head: [[0]->[2]->[4]]
+        d2: 1 ListNode { val: 2, next: ListNode { val: 3, next: null } }
+        p2: 2, 2
+        list1: [[2]->[3]], list2: [[2]->[4]], head: [[0]->[1]->[2]->[4]]
+        d: 2 ListNode { val: 4, next: null }
+        p1: 3, 4
+        list1: [[3]], list2: [[4]], head: [[0]->[1]->[2]->[3]]
+        d: 4 null
+        p1: undefined, undefined
+    */
+    it("[1,2,3] + [0,2,4] = [0,1,2,2,3,4]", () => {
+        const expected = stringifyList(parseList("0,1,2,2,3,4"));
+        const list1 = parseList("1,2,3");
+        const list2 = parseList("0,2,4");
         const result = mergeTwoLists(list1, list2);
         assert.equal(stringifyList(result), expected);
     });
@@ -269,8 +295,8 @@ var mergeTwoLists = function (list1, list2) {
         // 7 vs 8
         if (list1.val <= list2.val) {
             // 10 vs 9 ... X
-            if (list1.next && list1.next.val < list2.val) {
-                while (list1.next && list1.next.val < list2.val) {
+            if (list1.next && list1.next.val <= list2.val) {
+                while (list1.next && list1.next.val <= list2.val) {
                     list1 = list1.next;
                     console.log(`list1 -> list1.next: ${list1?.val}`);
                 }
@@ -289,7 +315,7 @@ var mergeTwoLists = function (list1, list2) {
             // 7->8
             list1.next = list2;
             // list2 = 8 -> 9 -> [9]
-            while (list2.next && list2.next.val < list1Next.val) {
+            while (list1Next && list2.next && list2.next.val <= list1Next.val) {
                 console.log("f,", list2.val);
                 list2 = list2.next;
             }
@@ -304,8 +330,8 @@ var mergeTwoLists = function (list1, list2) {
             list2 = list2Next; // null
             console.log(`p1: ${list1?.val}, ${list2?.val}`);
         } else {
-            if (list2.next && list2.next.val < list1.val) {
-                while (list2.next && list2.next.val < list1.val) {
+            if (list2.next && list2.next.val <= list1.val) {
+                while (list2.next && list2.next.val <= list1.val) {
                     list2 = list2.next;
                     console.log(`list2 -> list2.next: ${list2?.val}`);
                 }
@@ -321,7 +347,7 @@ var mergeTwoLists = function (list1, list2) {
             const list2Next = list2.next;
             list2.next = list1;
 
-            while (list1.next && list1.next.val < list2Next.val) {
+            while (list1.next && list2Next && list1.next.val <= list2Next.val) {
                 console.log("f2,", list1.val);
                 list1 = list1.next;
             }
