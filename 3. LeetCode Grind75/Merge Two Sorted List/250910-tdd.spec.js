@@ -1,3 +1,4 @@
+import * as util from "util"; // has no default export
 import { describe, it, assert } from "vitest";
 
 function ListNode(val, next) {
@@ -16,8 +17,16 @@ function parseList(str) {
 }
 
 function stringifyList(node) {
+    const visited = new Set();
+
     const result = [];
     while (node) {
+        if (visited.has(node)) {
+            throw new Error(
+                "cycle in the requested list:" + util.inspect(node)
+            );
+        }
+        visited.add(node);
         result.push(node.val);
         node = node.next;
     }
