@@ -45,7 +45,7 @@ function showLinkes(head) {
     return str;
 }
 
-describe.only("Merge Two Sorted Lists", () => {
+describe("Merge Two Sorted Lists", () => {
     it("[] + [] = []", () => {
         const expected = stringifyList(null);
 
@@ -181,18 +181,42 @@ describe.only("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    // 전송 후 틀린 TC
-    it("[-10,-9,-6,-4,1,9,9] + [-5,-3,0,7,8,8] = [-10,-9,-6,-5,-4,-3,0,1,7,8,8,9,9]", () => {
+    it("[1,2,5] + [3,4,6] = [1,2,3,4,5,6]", () => {
+        const expected = stringifyList(parseList("1,2,3,4,5,6"));
+        const list1 = parseList("1,2,5");
+        const list2 = parseList("3,4,6");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    it("[0,1,2,6,7,8] + [3,4,5,9,10,11] = [0,1,2,3,4,5,6,7,8,9,10,11]", () => {
+        const expected = stringifyList(parseList("0,1,2,3,4,5,6,7,8,9,10,11"));
+        const list1 = parseList("0,1,2,6,7,8");
+        const list2 = parseList("3,4,5,9,10,11");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    // 이건 여전히 안되네...
+    it("[0,1,2,4,7,10,10] + [3,5,6,8,9,9] = [0,1,2,3,4,5,6,7,8,9,9,10,10]", () => {
         const expected = stringifyList(
-            parseList("-10,-9,-6,-5,-4,-3,0,1,7,8,8,9,9")
+            parseList("0,1,2,3,4,5,6,7,8,9,9,10,10")
         );
-        const list1 = parseList("-10,-9,-6,-4,1,9,9");
-        const list2 = parseList("-5,-3,0,7,8,8");
+        const list1 = parseList("0,1,2,4,7,10,10");
+        const list2 = parseList("3,5,6,8,9,9");
         const result = mergeTwoLists(list1, list2);
         assert.equal(stringifyList(result), expected);
     });
 });
 
+/*
+    1[1,2] -> 2[3,4] -> 1[5] -> 2[6]
+    head = list1 (1)
+
+    list1: [[1]->[2]->[5]], list2: [[3]->[4]->[6]]
+    list1: [[2]->[5]], list2: [[3]->[4]->[6]]
+    list1: [[5]], list2: [[4]->[6]]
+*/
 var mergeTwoLists = function (list1, list2) {
     if (!list1 || !list2) return list1 ?? list2;
 
@@ -205,22 +229,33 @@ var mergeTwoLists = function (list1, list2) {
             `list1: [${showLinkes(list1)}], list2: [${showLinkes(list2)}]`
         );
 
+        // 머리가 안 좋으니깐, 조금씩만 바꾸고 테스트 돌려봐야 함. 이것이 바로 지혜다.
         if (list1.val <= list2.val) {
-            if (list1Next && list1Next.val < list2.val) {
-                list1 = list1.next;
+            if (list1.next && list1.next.val < list2.val) {
+                while (list1.next && list1.next.val < list2.val) {
+                    list1 = list1.next; // [1,2,5] 중 [2]까지만 이동. [5]가 되면 난처함.
+                }
+                const list1Next = list1.next;
+                list1.next = list2; // head를 잇기 위해 list1->list2를 이어줌. ([1,2] -> [3,4,6])
+                list1 = list1Next; // list1은 [5]로 이동함.
                 continue;
             }
+
             list1.next = list2;
 
-            // [2] vs [3,4] 일 때, [2] -> [3] -> null 이 되어버리므로, 조건부로 할당해야 함.
             if (list1Next) {
                 list2.next = list1Next;
             }
             list1 = list1Next;
             list2 = list2Next;
         } else {
-            if (list2Next && list2Next.val < list1.val) {
-                list2 = list2.next;
+            if (list2.next && list2.next.val < list1.val) {
+                while (list2.next && list2.next.val < list1.val) {
+                    list2 = list2.next; // [3,4,6] 중 [4]까지만 이동.
+                }
+                const list2Next = list2.next;
+                list2.next = list1;
+                list2 = list2Next;
                 continue;
             }
 
