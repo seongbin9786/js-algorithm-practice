@@ -218,21 +218,29 @@ describe("Merge Two Sorted Lists", () => {
         assert.equal(stringifyList(result), expected);
     });
 
-    // 위 TC랑 다르게 또 안 됨...
-    it.only("[7,10,10] + [8,9,9] = [7,8,9,9,10,10]", () => {
-        const expected = stringifyList(parseList("7,8,8,9,9,10,10"));
+    // 위/아래랑 동일 TC
+    it("[7,10,10] + [8,9,9] = [7,8,9,9,10,10]", () => {
+        const expected = stringifyList(parseList("7,8,9,9,10,10"));
         const list1 = parseList("7,10,10");
         const list2 = parseList("8,9,9");
         const result = mergeTwoLists(list1, list2);
         assert.equal(stringifyList(result), expected);
     });
 
-    it.skip("[0,1,2,4,7,10,10] + [3,5,6,8,9,9] = [0,1,2,3,4,5,6,7,8,9,9,10,10]", () => {
+    it("[0,1,2,4,7,10,10] + [3,5,6,8,9,9] = [0,1,2,3,4,5,6,7,8,9,9,10,10]", () => {
         const expected = stringifyList(
             parseList("0,1,2,3,4,5,6,7,8,9,9,10,10")
         );
         const list1 = parseList("0,1,2,4,7,10,10");
         const list2 = parseList("3,5,6,8,9,9");
+        const result = mergeTwoLists(list1, list2);
+        assert.equal(stringifyList(result), expected);
+    });
+
+    it.only("[-10,-10,-9,-4,1,6,6] + [-7] = [7,8,9,9,10,10]", () => {
+        const expected = stringifyList(parseList("-10,-10,-9,-7,-4,1,6,6"));
+        const list1 = parseList("-10,-10,-9,-4,1,6,6");
+        const list2 = parseList("-7");
         const result = mergeTwoLists(list1, list2);
         assert.equal(stringifyList(result), expected);
     });
@@ -243,15 +251,8 @@ describe("Merge Two Sorted Lists", () => {
 // TC를 최대한 좁혀서 오류를 만들어내고, 이후 TC를 넓혀가며 원본 TC 동작을 확인하기
 
 /*
-    [1,4] + [2,3] = [1,2,3,4]
-
-    1
-    2,3
-    4
-    이어야 하는데,
-    1,2,4가 나옴
-
-    흠.. 코드가 복잡해짐
+    list1: [[7]->[10]->[10]], list2: [[8]->[9]->[9]], head: [[7]->[10]->[10]]
+    
 */
 var mergeTwoLists = function (list1, list2) {
     if (!list1 || !list2) return list1 ?? list2;
@@ -265,9 +266,9 @@ var mergeTwoLists = function (list1, list2) {
             )}], head: [${showLinkes(head)}]`
         );
 
-        // 1 vs 2
+        // 7 vs 8
         if (list1.val <= list2.val) {
-            // 4 vs 3 ... X
+            // 10 vs 9 ... X
             if (list1.next && list1.next.val < list2.val) {
                 while (list1.next && list1.next.val < list2.val) {
                     list1 = list1.next;
@@ -282,25 +283,26 @@ var mergeTwoLists = function (list1, list2) {
                 continue;
             }
 
-            // [1,4], [2,3]
+            // [7, 10, 10], [8, 9, 9]
+            // list1Next = [10, 10]
             const list1Next = list1.next;
-            // 1->2 (문제 없음)
+            // 7->8
             list1.next = list2;
-            // 여기서 forward할 수밖에 없음.
-            // 됨!
-            // 흠.. 근데 list2Next도 forward해야 하지 않음? 아래에서 하네. 굳.
+            // list2 = 8 -> 9 -> [9]
             while (list2.next && list2.next.val < list1Next.val) {
+                console.log("f,", list2.val);
                 list2 = list2.next;
             }
 
+            console.log("d:", list2.val, list2.next); // 현재 list2가 끝임.
             const list2Next = list2.next;
             if (list1Next) {
-                // 2->4 (3이 제거되는 순간)
-                // 이 구문이 빠질 순 없음. [2,3]을 다 forward해야 함.
+                // [9]->[10,10]
                 list2.next = list1Next;
             }
-            list1 = list1Next;
-            list2 = list2Next;
+            list1 = list1Next; // [10,10]
+            list2 = list2Next; // null
+            console.log(`p1: ${list1?.val}, ${list2?.val}`);
         } else {
             if (list2.next && list2.next.val < list1.val) {
                 while (list2.next && list2.next.val < list1.val) {
@@ -320,14 +322,17 @@ var mergeTwoLists = function (list1, list2) {
             list2.next = list1;
 
             while (list1.next && list1.next.val < list2Next.val) {
+                console.log("f2,", list1.val);
                 list1 = list1.next;
             }
+            console.log("d2:", list1.val, list1.next);
             const list1Next = list1.next;
             if (list2Next) {
                 list1.next = list2Next;
             }
             list1 = list1Next;
             list2 = list2Next;
+            console.log(`p2: ${list1?.val}, ${list2?.val}`);
         }
     }
 
