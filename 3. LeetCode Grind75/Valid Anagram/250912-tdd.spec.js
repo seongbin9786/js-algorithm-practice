@@ -8,11 +8,12 @@ import { describe, it, assert } from "vitest";
 var isAnagram = function (s, t) {
     const aCode = "a".charCodeAt(0);
     const counter = Array.from({ length: 30 }, () => 0); // 알파벳 몇개인지 헷갈려서 안전하게 30
-    for (let i = 0; i < s.length; i++) {
+    const length = Math.max(s.length, t.length);
+    for (let i = 0; i < length; i++) {
         counter[s.charCodeAt(i) - aCode]++;
         counter[t.charCodeAt(i) - aCode]--;
     }
-    return !counter.find((v) => v !== 0);
+    return counter.findIndex((v) => v !== 0) === -1;
 };
 
 describe.only("Valid Anagram", () => {
@@ -30,17 +31,17 @@ describe.only("Valid Anagram", () => {
         assert.equal(result, true);
     });
 
-    it("[a] = [b]", () => {
+    it("[a] != [b]", () => {
         const input = "a";
         const expected = "b";
         const result = isAnagram(input, expected);
         assert.equal(result, false);
     });
 
-    it("[ab] = [ba]", () => {
-        const input = "ab";
-        const expected = "ba";
+    it("[a] != [ab]", () => {
+        const input = "a";
+        const expected = "ab";
         const result = isAnagram(input, expected);
-        assert.equal(result, true);
+        assert.equal(result, false);
     });
 });
