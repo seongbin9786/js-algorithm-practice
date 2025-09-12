@@ -1,6 +1,6 @@
 import { assert, describe, it } from "vitest";
 
-describe.only("Invert Binary Tree", () => {
+describe("Invert Binary Tree", () => {
     it("null -> null", () => {
         const expected = null;
         const result = invertTree(null);
