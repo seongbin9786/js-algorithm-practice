@@ -16,7 +16,7 @@ var isAnagram = function (s, t) {
     return counter.findIndex((v) => v !== 0) === -1;
 };
 
-describe.only("Valid Anagram", () => {
+describe("Valid Anagram", () => {
     it("[] = []", () => {
         const input = "";
         const expected = "";
