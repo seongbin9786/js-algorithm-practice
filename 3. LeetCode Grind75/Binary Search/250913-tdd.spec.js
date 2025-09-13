@@ -2,9 +2,12 @@ import { describe, it, assert } from "vitest";
 
 describe.only("Binary Search (time complexity limit: O(log n)", () => {
     it.each([
-        [1, [1], true],
-        [2, [2], true],
-        // [2, [1, 2], true],
+        //[1, [1], true],
+        //[2, [2], true],
+        //[1, [2], false],
+        //[2, [1, 2], true],
+        //[2, [1, 2, 3], true],
+        [3, [1, 2, 3], true], // 오, 안된다. 신기함.
     ])("find [%i] from %j => %s", (target, source, expected) => {
         const result = search(source, target);
         assert.equal(result, expected);
@@ -17,5 +20,23 @@ describe.only("Binary Search (time complexity limit: O(log n)", () => {
  * @return {number}
  */
 var search = function (nums, target) {
-    return true;
+    // 재귀도 되고, while도 되고.
+    // 일단 재귀로 풀어볼까.
+    const binarySearch = (start, end) => {
+        if (start > end) {
+            // 일단 최소 구현
+            return false;
+        }
+        const mid = Math.floor((start + end) / 2);
+        console.log("idx:", start, mid, end);
+        if (nums[mid] === target) {
+            return true;
+        }
+        if (nums[mid] < target) {
+            return binarySearch(start, mid - 1);
+        }
+        return binarySearch(mid + 1, end);
+    };
+
+    return binarySearch(0, nums.length);
 };
