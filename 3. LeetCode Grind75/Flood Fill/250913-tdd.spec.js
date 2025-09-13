@@ -33,6 +33,20 @@ describe.only("Flood Fill", () => {
         const result = floodFill(image, sr, sc, color);
         assert.equal(JSON.stringify(result), JSON.stringify(expected));
     });
+    it("fill [[0,0],[0,0]] from (0,0) to 1 => [[1,1],[1,1]]", () => {
+        const image = [
+            [0, 0],
+            [0, 0],
+        ];
+        const color = 1;
+        const [sr, sc] = [0, 0];
+        const expected = [
+            [1, 1],
+            [1, 1],
+        ];
+        const result = floodFill(image, sr, sc, color);
+        assert.equal(JSON.stringify(result), JSON.stringify(expected));
+    });
 });
 
 /**
@@ -43,6 +57,15 @@ describe.only("Flood Fill", () => {
  * @return {number[][]}
  */
 var floodFill = function (image, sr, sc, color) {
-    image[0] = color;
+    if (image[0] instanceof Array) {
+        for (let i = 0; i < image.length; i++) {
+            for (let j = 0; j < image[0].length; j++) {
+                image[i][j] = color;
+            }
+        }
+    } else {
+        image[0] = color;
+    }
+
     return image;
 };
