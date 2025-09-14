@@ -31,7 +31,11 @@ Follow up: If you have figured out the O(n) solution, try coding another solutio
 import { describe, it, assert } from "vitest";
 
 describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
-    it.each([[[1], 1]])("max sum of %j => %i", (source, expected) => {
+    it.each([
+        [[0], 0],
+        [[1], 1],
+        [[0, 1], 1],
+    ])("max sum of %j => %i", (source, expected) => {
         const result = maxSubArray(source);
         assert.equal(result, expected);
     });
@@ -42,5 +46,5 @@ describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
  * @return {number}
  */
 var maxSubArray = function (nums) {
-    return 1;
+    return nums.reduce((sum, curr) => sum + curr);
 };
