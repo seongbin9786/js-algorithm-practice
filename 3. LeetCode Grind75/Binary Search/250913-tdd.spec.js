@@ -1,6 +1,6 @@
 import { describe, it, assert } from "vitest";
 
-describe.only("Binary Search (time complexity limit: O(log n)", () => {
+describe("Binary Search (time complexity limit: O(log n)", () => {
     it.each([
         [1, [1], 0],
         [2, [2], 0],
