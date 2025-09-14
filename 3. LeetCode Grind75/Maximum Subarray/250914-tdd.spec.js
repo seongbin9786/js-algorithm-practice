@@ -30,15 +30,21 @@ Follow up: If you have figured out the O(n) solution, try coding another solutio
 
 import { describe, it, assert } from "vitest";
 
-describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
+describe("Maximum Subarray (time complexity limit: O(n))", () => {
     it.each([
         [[0], 0],
         [[1], 1],
+        [[-1], -1],
         [[0, 1], 1],
         [[0, -1], 0],
         [[-1, 0], 0],
+        [[-1, 0], 0],
+        [[-1, 1], 1],
+        [[1, -1], 1],
         [[-1, 2, -1], 2],
         [[-1, 2, -1, 2], 3],
+        [[-5, 0, -5], 0],
+        [[-2, 1, -3, 4, -1, 2, 1, -5, 4], 6], // 리트코드 TC
     ])("max sum of %j => %i", (source, expected) => {
         const result = maxSubArray(source);
         assert.equal(result, expected);
@@ -50,8 +56,8 @@ describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
  * @return {number}
  */
 var maxSubArray = function (nums) {
-    let globalMax = nums[0];
     let max = nums[0];
+    let currSum = nums[0];
 
     for (let i = 1; i < nums.length; i++) {
         // 1. 기존 max까지만 씀
@@ -61,9 +67,9 @@ var maxSubArray = function (nums) {
         // --> 흠.. 옛날의 max가 더 클 때가 있음... 이러면 케이스 제한이 어려운데? 아 이해함.
         // --> globalMax랑 max를 분리하면 됨.
         // 3. 현재값만 씀
-        max = Math.max(nums[i], max + nums[i]);
-        globalMax = Math.max(globalMax, max);
+        currSum = Math.max(nums[i], currSum + nums[i]);
+        max = Math.max(max, currSum);
     }
 
-    return globalMax;
+    return max;
 };
