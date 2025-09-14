@@ -36,6 +36,7 @@ describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
         [[1], 1],
         [[0, 1], 1],
         [[0, -1], 0],
+        [[-1, 0], 0],
     ])("max sum of %j => %i", (source, expected) => {
         const result = maxSubArray(source);
         assert.equal(result, expected);
@@ -47,5 +48,5 @@ describe.only("Maximum Subarray (time complexity limit: O(n))", () => {
  * @return {number}
  */
 var maxSubArray = function (nums) {
-    return nums.reduce((sum, curr) => Math.max(sum, sum + curr));
+    return nums.reduce((sum, curr) => Math.max(sum, sum + curr, curr));
 };
