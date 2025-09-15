@@ -10,12 +10,14 @@ According to the definition of LCA on Wikipedia:
 
 import { describe, it, assert } from "vitest";
 
-describe.only("LCA of BST", () => {
+describe("LCA of BST", () => {
     it.each([
         // 흠... TC가 리트랑 좀 다르긴 한데 어쩔 수 없음
         // 리트 방식으로 어떻게 null 처리를 할지 모르겠음..
-        [[0], 0, 0, 0],
-        [[1, 0, 2], 1, 2, 1],
+        [[1, 0, 2], 1, 2, 1], // 1. p < root < q
+        [[1, null, 2], 1, 2, 1], // 2. p = root < q
+        [[1, 0, null], 0, 1, 1], // 3. p < root = q
+        [[3, 2, null, 1], 1, 2, 2], // 4. p < q < root
         [[0, null, 1, null, null, null, 2], 1, 2, 1], // 5. root < p < q
         [[0, null, 1, null, null, null, 2], 2, 1, 1], // 6. root < q < p
     ])("max sum of %j => %i", (root, p, q, expected) => {
@@ -49,26 +51,26 @@ var lowestCommonAncestor = function (root, p, q) {
 
         흠.. 찾는 건 그냥 값 기준으로 이동을 먼저 하면 될 거 같음
         [CASE]
+        (p, q는 순서가 무관하다고 할 때)
         1. p < root < q
-        2. q < root < p
+        2. p = root < q
+        4. p < root = q
         3. p < q < root
         4. q < p < root
         5. root < p < q
         6. root < q < p
-
-        우선 하나씩 고고
-        1. root < p < q
     */
     /*
-    구현 로직
-    - p.right = q 인 경우: p가 나와야 함
-    - q.right = p 인 경우: q가 나와야 함
-   */
-    if (p.right === q) {
-        return p;
-    }
-    if (q.right === p) {
-        return q;
+        - 케이스 별로 생각하면 복잡해서, 설계를 좀 했음. --> 좋은 선택이었음
+        - 그림을 그려봤더니, 트리를 내려갈 때마다 (min,max) '장벽'이 생김
+        - 장벽으로 계싼하려다가.. 애초에 찾는 값이 root 기준 양쪽이면, LCA = root
+        - 한쪽에 있으면, 내려가서 다시 확인.
+        - 만약 양쪽에 있거나, p,q 중 하나가 본인이면 root
+    */
+    if (p.val > root.val && q.val > root.val) {
+        return lowestCommonAncestor(root.right, p, q);
+    } else if (p.val < root.val && q.val < root.val) {
+        return lowestCommonAncestor(root.left, p, q);
     }
 
     return root;
