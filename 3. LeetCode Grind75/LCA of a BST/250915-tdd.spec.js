@@ -16,8 +16,8 @@ describe.only("LCA of BST", () => {
         // 리트 방식으로 어떻게 null 처리를 할지 모르겠음..
         [[0], 0, 0, 0],
         [[1, 0, 2], 1, 2, 1],
-        [[0, null, 1, null, null, null, 2], 1, 2, 1],
-        // [[2, 1, null, 0], 1, 0, 1],
+        [[0, null, 1, null, null, null, 2], 1, 2, 1], // 5. root < p < q
+        [[0, null, 1, null, null, null, 2], 2, 1, 1], // 6. root < q < p
     ])("max sum of %j => %i", (root, p, q, expected) => {
         const tree = createBST(root);
         const result = lowestCommonAncestor(
@@ -41,20 +41,36 @@ function TreeNode(val) {
  * @return {TreeNode}
  */
 var lowestCommonAncestor = function (root, p, q) {
-    console.log("root:", JSON.stringify(root));
-    // 실제로 구현을 해야 되는데...
     /*
-        0
-      1
-    2
+        어떻게 구현하지?
+        찾기
+        - 현재 트리에서 p를 찾기
+        - 현재 트리에서 q를 찾기
 
-    일 떄 1을 반환해야 함.
+        흠.. 찾는 건 그냥 값 기준으로 이동을 먼저 하면 될 거 같음
+        [CASE]
+        1. p < root < q
+        2. q < root < p
+        3. p < q < root
+        4. q < p < root
+        5. root < p < q
+        6. root < q < p
+
+        우선 하나씩 고고
+        1. root < p < q
     */
-    // 우리 트리는 동일 인스턴스를 지원하지 않아서 val로 체크 (어차피 val에 대해 독립)
-    if (root.right?.val === p.val && p.right?.val === q.val) {
+    /*
+    구현 로직
+    - p.right = q 인 경우: p가 나와야 함
+    - q.right = p 인 경우: q가 나와야 함
+   */
+    if (p.right === q) {
         return p;
     }
-    console.log("returning root", root.right, p.right);
+    if (q.right === p) {
+        return q;
+    }
+
     return root;
 };
 
