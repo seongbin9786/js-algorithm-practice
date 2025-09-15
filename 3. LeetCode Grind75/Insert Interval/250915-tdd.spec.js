@@ -65,17 +65,23 @@ describe.only("Insert Interval", () => {
                 [5, 6],
             ],
         ],
-        // [
-        //     [
-        //         [1, 2],
-        //         [3, 4],
-        //     ],
-        //     [2, 5],
-        //     [
-        //         [1, 2],
-        //         [3, 4],
-        //     ],
-        // ],
+        [
+            [
+                [1, 2],
+                [3, 4],
+            ],
+            [2, 3],
+            [[1, 4]],
+        ],
+        // 덮는 케이스
+        [
+            [
+                [1, 2],
+                [3, 4],
+            ],
+            [1, 4],
+            [[1, 4]],
+        ],
     ])("%j + %j = %j", (intervals, newInterval, expected) => {
         const result = insert(intervals, newInterval);
         assert.deepEqual(result, expected);
@@ -88,5 +94,51 @@ describe.only("Insert Interval", () => {
  * @return {number[][]}
  */
 var insert = function (intervals, newInterval) {
-    return [intervals[0], newInterval, intervals[1]];
+    const prevIntervals = [];
+
+    /*
+    2. [병합이 있는 경우]
+    - 겹치는 건 합쳐야 함
+    - 겹칠 때 max로 end 구간을 확인하면 될 듯?
+
+    1. 일단 병합이 발생한다면, 그것은 newInterval의 구간에 겹치기 때문임
+    2. newInterval은 하나이므로, 경우의 수가 적음
+    3. interval.end < newInterval.start || interval.start < newInterval.end 이면 겹치는 것임
+      - 겹친다면, end = max(i.end, nI.end)
+    4. 해서, 겹치는 interval들은 모두 제거하고, newInterval의 '수정된' start, end를 삽입하면 됨
+    5. newInterval은 처음 겹친 interval부터 마지막 겹친 interval를 대체하고 삽입됨
+      - 안 겹치면 그대로 삽입하다가, newInteval 겹치는 부분들 처리하고 삽입 후, 이후 interval들은 그대로 삽입하면 됨
+
+    (생각이 든 것)
+    - 아예 포함 관계일 수도 있잖아? 이 TC 추가해야겠다.
+    */
+    let idx = 0;
+    while (idx < intervals.length) {
+        const interval = intervals[idx];
+        console.log(`interval: ${interval}, newInterval: ${newInterval}`);
+        if (interval[1] < newInterval[0]) {
+            // 앞이라서 안겹침
+            prevIntervals.push(interval);
+        } else if (
+            interval[0] < newInterval[0] && // 이 조건이 없으면, 뒷 interval도 여기에 매칭됨
+            interval[1] >= newInterval[0]
+        ) {
+            // newInterval 앞의 interval과 겹치는 경우
+            newInterval[0] = interval[0];
+            console.log("1");
+        } else if (interval[0] <= newInterval[1]) {
+            // 앞 interval에 대한 체크는 안 해도 됨
+            // newInterval 뒤의 interval과 겹치는 경우
+            console.log("2");
+            newInterval[1] = interval[1];
+        } else {
+            // 뒤라서 안겹침. 이 때 newInterval 같이 넣어야 함!
+            // mergedIntervals.push(newInterval);
+            // 현재 idx 순번은 나중에 slice로 넣음
+            break;
+        }
+        idx++;
+    }
+
+    return [...prevIntervals, newInterval, ...intervals.slice(idx)];
 };
