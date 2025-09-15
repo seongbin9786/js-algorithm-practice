@@ -53,35 +53,39 @@ describe.only("Insert Interval", () => {
             - 겹칠 때 max로 end 구간을 확인하면 될 듯?
 
         */
-        [
-            [
-                [1, 2],
-                [5, 6],
-            ],
-            [3, 4],
-            [
-                [1, 2],
-                [3, 4],
-                [5, 6],
-            ],
-        ],
-        [
-            [
-                [1, 2],
-                [3, 4],
-            ],
-            [2, 3],
-            [[1, 4]],
-        ],
-        // 덮는 케이스
-        [
-            [
-                [1, 2],
-                [3, 4],
-            ],
-            [1, 4],
-            [[1, 4]],
-        ],
+        // [
+        //     [
+        //         [1, 2],
+        //         [5, 6],
+        //     ],
+        //     [3, 4],
+        //     [
+        //         [1, 2],
+        //         [3, 4],
+        //         [5, 6],
+        //     ],
+        // ],
+        // [
+        //     [
+        //         [1, 2],
+        //         [3, 4],
+        //     ],
+        //     [2, 3],
+        //     [[1, 4]],
+        // ],
+        // // newInterval이 intervals들을 포함하는 케이스
+        // [
+        //     [
+        //         [1, 2],
+        //         [3, 4],
+        //     ],
+        //     [1, 4],
+        //     [[1, 4]],
+        // ],
+        // // newInterval만 있는 케이스
+        // [[], [1, 2], [[1, 2]]],
+        // intervals의 interval 하나가 newInterval을 포함하는 케이스 (리트 코드 틀린 Case)
+        [[[1, 4]], [2, 3], [[1, 4]]],
     ])("%j + %j = %j", (intervals, newInterval, expected) => {
         const result = insert(intervals, newInterval);
         assert.deepEqual(result, expected);
@@ -117,24 +121,24 @@ var insert = function (intervals, newInterval) {
         const interval = intervals[idx];
         console.log(`interval: ${interval}, newInterval: ${newInterval}`);
         if (interval[1] < newInterval[0]) {
-            // 앞이라서 안겹침
+            // newInterval 앞의 interval들은 따로 삽입
             prevIntervals.push(interval);
         } else if (
-            interval[0] < newInterval[0] && // 이 조건이 없으면, 뒷 interval도 여기에 매칭됨
+            interval[0] <= newInterval[0] && // 이 조건이 없으면, 뒷 interval도 여기에 매칭됨 (newInterval을 포함하는 경우도 존재)
             interval[1] >= newInterval[0]
         ) {
             // newInterval 앞의 interval과 겹치는 경우
-            newInterval[0] = interval[0];
-            console.log("1");
+            //
+            newInterval[0] = Math.min(interval[0], newInterval[0]);
+            newInterval[1] = Math.max(interval[1], newInterval[1]);
         } else if (interval[0] <= newInterval[1]) {
             // 앞 interval에 대한 체크는 안 해도 됨
             // newInterval 뒤의 interval과 겹치는 경우
-            console.log("2");
-            newInterval[1] = interval[1];
+            // 근데 newInterval의 end가 더 클 수도 있음
+            newInterval[0] = Math.min(interval[0], newInterval[0]);
+            newInterval[1] = Math.max(interval[1], newInterval[1]);
         } else {
-            // 뒤라서 안겹침. 이 때 newInterval 같이 넣어야 함!
-            // mergedIntervals.push(newInterval);
-            // 현재 idx 순번은 나중에 slice로 넣음
+            // newInterval 뒤의 interval들은 따로 삽입
             break;
         }
         idx++;
