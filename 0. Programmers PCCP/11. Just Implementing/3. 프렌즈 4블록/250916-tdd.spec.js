@@ -27,7 +27,7 @@ board는 길이 n인 문자열 m개의 배열로 주어진다. 블록을 나타�
 
 import { describe, it, assert } from "vitest";
 
-describe.only("프렌즈 4블록 (카카오 Lv2)", () => {
+describe("프렌즈 4블록 (카카오 Lv2) / 예외 풀이 실패 (TC 3개 실패)", () => {
     it.each([
         // 최소 칸에서 제거 case
         [2, 2, ["aa", "aa"], 4],
@@ -48,6 +48,7 @@ describe.only("프렌즈 4블록 (카카오 Lv2)", () => {
             ["TTTANT", "RRFACC", "RRRFCC", "TRRRAA", "TTMMMF", "TMMTTJ"],
             15,
         ],
+        // 흠.. TC 3개 실패... minR이 문제점일 거 같음
     ])("[%i*%i]%j => %i", (m, n, board, expected) => {
         const result = solution(m, n, board);
         assert.equal(result, expected);
@@ -65,7 +66,7 @@ function solution(m, n, board) {
             r--;
         }
 
-        return [[orgR, c], board[r][c]];
+        return [[r, c], board[r][c]];
     }
 
     function remove([r, c]) {
@@ -79,27 +80,29 @@ function solution(m, n, board) {
     }
 
     let minR = 0;
-    let loops = 0;
-    while (loops < 10) {
+    while (true) {
         // check 단계
         for (let r = minR; r < m - 1; r++) {
             for (let c = 0; c < n - 1; c++) {
-                const ltPos = [r, c];
-                const lt = board[r][c]; // minR을 뒀는데, 이 r을 그보다 위에서 찾으면 중복 제거가 불가능함
-                const [rtPos, rt] = get(r + 1, c);
-                const [lbPos, lb] = get(r, c + 1);
+                const [ltPos, lt] = get(r, c);
+                const [lbPos, rt] = get(r + 1, c);
+                const [rtPos, lb] = get(r, c + 1);
                 const [rbPos, rb] = get(r + 1, c + 1);
 
                 if (lt !== "-" && lt === rt && lt === lb && lt === rb) {
                     minR = r;
-                    // 왜 이게 중복이 되는 거지?
-                    // 여기서 한참 또 걸리네...
-                    // 뭔가 기준이 있어야 함. 같은 턴에서 중복 체크가 발생함.
-                    // 이해함. while을 여러 번 돌 게 아님. 그림 좀 그려보니깐, 한 번 지나간 곳을 다시 체크 안 해도 됨. 그럼 현재의 중복 case는 제거 가능함.
-                    console.log(
-                        `minR: ${minR}, lt: ${lt}(${ltPos}), rt: ${rt}(${rtPos}), lb: ${lb}(${lbPos}), rb: ${rb}(${rbPos})`
-                    );
-                    console.log(board);
+                    // console.log(
+                    //     `minR: ${minR}, lt: ${lt}(${ltPos}), rt: ${rt}(${rtPos}), lb: ${lb}(${lbPos}), rb: ${rb}(${rbPos})`
+                    // );
+                    // console.log(board);
+
+                    // 문제점: 같은 턴에서 중복 체크가 발생함.
+                    // 그림 좀 그려보니깐 이해함. 한 번 지나간 곳을 다시 체크 안 해도 됨. (O)
+                    // while을 여러 번 돌 게 아님. 그럼 현재의 중복 case는 제거 가능함. (X)
+                    if (ltPos[0] === lbPos[0] || rtPos[0] === rbPos[0]) {
+                        continue; // 둘이 같은 x로 resolve하면 2x2가 아님
+                    }
+
                     remove(ltPos);
                     remove(rtPos);
                     remove(lbPos);
@@ -109,13 +112,12 @@ function solution(m, n, board) {
         }
 
         currRemoved.forEach(markRemoved);
-        console.log("currRemoved.size:", currRemoved.size);
+        // console.log("currRemoved.size:", currRemoved.size);
         totalRemoved += currRemoved.size;
         if (currRemoved.size === 0) {
             break;
         }
         currRemoved.clear();
-        loops++;
     }
 
     return totalRemoved;
