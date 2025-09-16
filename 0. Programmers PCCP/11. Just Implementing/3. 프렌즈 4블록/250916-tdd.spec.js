@@ -29,8 +29,14 @@ import { describe, it, assert } from "vitest";
 
 describe("프렌즈 4블록 (카카오 Lv2)", () => {
     it.each([
+        // 최소 칸에서 제거 case
         [2, 2, ["aa", "aa"], 4],
+        // 최소 칸에서 미제거 case
         [2, 2, ["ba", "aa"], 0],
+        // 3x2에서 모두 제거 case
+        [3, 2, ["aa", "aa", "aa"], 6],
+        [3, 2, ["bb", "bb", "bb"], 6],
+        [3, 3, ["aab", "aab", "bbb"], 4],
     ])("%j + %j = %j", (m, n, board, expected) => {
         const result = solution(m, n, board);
         assert.equal(result, expected);
@@ -38,16 +44,15 @@ describe("프렌즈 4블록 (카카오 Lv2)", () => {
 });
 
 function solution(m, n, board) {
-    // 각 snapshot에 대해
-    let aCount = 0;
+    let numCount = 0;
 
     for (let r = 0; r < m; r++) {
         for (let c = 0; c < n; c++) {
-            if (board[r][c] === "a") {
-                aCount++;
+            if (board[r][c] === board[0][0]) {
+                numCount++;
             }
         }
     }
 
-    return aCount === 4 ? 4 : 0;
+    return numCount === m * n ? m * n : 0;
 }
