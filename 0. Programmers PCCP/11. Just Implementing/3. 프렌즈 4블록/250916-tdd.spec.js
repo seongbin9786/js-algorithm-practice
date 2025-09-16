@@ -36,23 +36,29 @@ describe("프렌즈 4블록 (카카오 Lv2)", () => {
         // 3x2에서 모두 제거 case
         [3, 2, ["aa", "aa", "aa"], 6],
         [3, 2, ["bb", "bb", "bb"], 6],
+        // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
         [3, 3, ["aab", "aab", "bbb"], 4],
-    ])("%j + %j = %j", (m, n, board, expected) => {
+    ])("[%i*%i]%j => %i", (m, n, board, expected) => {
         const result = solution(m, n, board);
         assert.equal(result, expected);
     });
 });
 
 function solution(m, n, board) {
-    let numCount = 0;
+    let box = 0;
 
-    for (let r = 0; r < m; r++) {
-        for (let c = 0; c < n; c++) {
-            if (board[r][c] === board[0][0]) {
-                numCount++;
+    for (let r = 0; r < m - 1; r++) {
+        for (let c = 0; c < n - 1; c++) {
+            const leftTop = board[r][c];
+            if (
+                leftTop === board[r + 1][c] &&
+                leftTop === board[r][c + 1] &&
+                leftTop === board[r + 1][c + 1]
+            ) {
+                box++;
             }
         }
     }
 
-    return numCount === m * n ? m * n : 0;
+    return box * 4;
 }
