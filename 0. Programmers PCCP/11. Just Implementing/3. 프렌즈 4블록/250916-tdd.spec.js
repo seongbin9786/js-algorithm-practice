@@ -38,6 +38,8 @@ describe("프렌즈 4블록 (카카오 Lv2)", () => {
         [3, 2, ["bb", "bb", "bb"], 6],
         // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
         [3, 3, ["aab", "aab", "bbb"], 4],
+        // 연쇄 제거 케이스 필요
+        [4, 2, ["bb", "aa", "aa", "bb"], 8],
     ])("[%i*%i]%j => %i", (m, n, board, expected) => {
         const result = solution(m, n, board);
         assert.equal(result, expected);
@@ -45,7 +47,9 @@ describe("프렌즈 4블록 (카카오 Lv2)", () => {
 });
 
 function solution(m, n, board) {
-    let box = 0;
+    // 중복 제거 필요함. 그냥 순서쌍을 저장하면 쉽긴함
+    // 일단 쉬운 구현이니 하고나서 생각 고고
+    const pos = new Set();
 
     for (let r = 0; r < m - 1; r++) {
         for (let c = 0; c < n - 1; c++) {
@@ -55,10 +59,14 @@ function solution(m, n, board) {
                 leftTop === board[r][c + 1] &&
                 leftTop === board[r + 1][c + 1]
             ) {
-                box++;
+                // c <= 30
+                pos.add(r * 100 + c);
+                pos.add((r + 1) * 100 + c);
+                pos.add(r * 100 + c + 1);
+                pos.add((r + 1) * 100 + c + 1);
             }
         }
     }
 
-    return box * 4;
+    return pos.size;
 }
