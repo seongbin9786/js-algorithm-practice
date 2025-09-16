@@ -27,17 +27,17 @@ board는 길이 n인 문자열 m개의 배열로 주어진다. 블록을 나타�
 
 import { describe, it, assert } from "vitest";
 
-describe("프렌즈 4블록 (카카오 Lv2)", () => {
+describe.only("프렌즈 4블록 (카카오 Lv2)", () => {
     it.each([
-        // 최소 칸에서 제거 case
-        [2, 2, ["aa", "aa"], 4],
-        // 최소 칸에서 미제거 case
-        [2, 2, ["ba", "aa"], 0],
-        // 3x2에서 모두 제거 case
-        [3, 2, ["aa", "aa", "aa"], 6],
-        [3, 2, ["bb", "bb", "bb"], 6],
-        // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
-        [3, 3, ["aab", "aab", "bbb"], 4],
+        // // 최소 칸에서 제거 case
+        // [2, 2, ["aa", "aa"], 4],
+        // // 최소 칸에서 미제거 case
+        // [2, 2, ["ba", "aa"], 0],
+        // // 3x2에서 모두 제거 case
+        // [3, 2, ["aa", "aa", "aa"], 6],
+        // [3, 2, ["bb", "bb", "bb"], 6],
+        // // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
+        // [3, 3, ["aab", "aab", "bbb"], 4],
         // 연쇄 제거 케이스 필요
         [4, 2, ["bb", "aa", "aa", "bb"], 8],
     ])("[%i*%i]%j => %i", (m, n, board, expected) => {
@@ -47,26 +47,70 @@ describe("프렌즈 4블록 (카카오 Lv2)", () => {
 });
 
 function solution(m, n, board) {
-    // 중복 제거 필요함. 그냥 순서쌍을 저장하면 쉽긴함
-    // 일단 쉬운 구현이니 하고나서 생각 고고
-    const pos = new Set();
+    board = [...board].map((row) => [...row]);
 
-    for (let r = 0; r < m - 1; r++) {
-        for (let c = 0; c < n - 1; c++) {
-            const leftTop = board[r][c];
-            if (
-                leftTop === board[r + 1][c] &&
-                leftTop === board[r][c + 1] &&
-                leftTop === board[r + 1][c + 1]
-            ) {
-                // c <= 30
-                pos.add(r * 100 + c);
-                pos.add((r + 1) * 100 + c);
-                pos.add(r * 100 + c + 1);
-                pos.add((r + 1) * 100 + c + 1);
+    let totalRemoved = 0;
+
+    while (true) {
+        const removed = new Set();
+
+        // check 단계
+        for (let r = 0; r < m - 1; r++) {
+            for (let c = 0; c < n - 1; c++) {
+                const leftTop = board[r][c];
+                if (
+                    leftTop === board[r + 1][c] &&
+                    leftTop === board[r][c + 1] &&
+                    leftTop === board[r + 1][c + 1]
+                ) {
+                    // c <= 30
+                    removed.add(r * 100 + c);
+                    removed.add((r + 1) * 100 + c);
+                    removed.add(r * 100 + c + 1);
+                    removed.add((r + 1) * 100 + c + 1);
+                }
             }
         }
+
+        console.log("AS-IS:", board);
+
+        // 끌어내리기
+        for (const pos of removed) {
+            const r = Math.floor(pos / 100);
+            const c = pos % 100;
+            board[r][c] = "-";
+        }
+
+        console.log("TO-BE:", board);
+
+        // 끌어내리기 단계: 그냥 (r+1,c+1),(r+1,c+1)에서 본인 포함 2칸씩 아래로 덮어쓰기. r+1은 고정
+        // 맨 위에서부터, 내 바로 위의 값을 가져옴. (X)
+        // 일단 느리지만 상단의 모든 요소를 끌어내려야 함.
+        // 순회는 밑에서 위로.
+        // 아 이게 2줄씩 제거되기 때문에, 바로 윗칸만 볼 수가 없음.
+        // -가 아닌 값을 위에서 아래로 내리는 방식이 필요할 듯
+        for (let r = m - 1; r >= 0; r--) {
+            for (let c = 0; c < n; c++) {
+                if (board[r][c] === "-") {
+                    console.log(`from: ${r},${c} `);
+                    for (let ri = r; ri >= 0; ri--) {
+                        console.log(
+                            `--> check: ${ri - 1},${c} (${
+                                board[ri - 1][c]
+                            }) --> ${ri},${c}(${board[ri][c]})`
+                        );
+                        board[ri][c] = ri >= 1 ? board[ri - 1][c] : "-";
+                        console.log(board);
+                    }
+                }
+            }
+        }
+
+        console.log("TO-BE:", board);
+
+        totalRemoved += removed.size;
+        break;
     }
 
-    return pos.size;
+    return totalRemoved;
 }
