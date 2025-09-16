@@ -29,19 +29,19 @@ import { describe, it, assert } from "vitest";
 
 describe.only("프렌즈 4블록 (카카오 Lv2)", () => {
     it.each([
-        // // 최소 칸에서 제거 case
-        // [2, 2, ["aa", "aa"], 4],
-        // // 최소 칸에서 미제거 case
-        // [2, 2, ["ba", "aa"], 0],
-        // // 3x2에서 모두 제거 case
-        // [3, 2, ["aa", "aa", "aa"], 6],
-        // [3, 2, ["bb", "bb", "bb"], 6],
-        // // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
-        // [3, 3, ["aab", "aab", "bbb"], 4],
-        // // 연쇄 제거 케이스 필요
-        // [4, 2, ["bb", "aa", "aa", "bb"], 8],
-        // // 프로그래머스 기본 TC들
-        // [4, 5, ["CCBDE", "AAADE", "AAABF", "CCBBF"], 14],
+        // 최소 칸에서 제거 case
+        [2, 2, ["aa", "aa"], 4],
+        // 최소 칸에서 미제거 case
+        [2, 2, ["ba", "aa"], 0],
+        // 3x2에서 모두 제거 case
+        [3, 2, ["aa", "aa", "aa"], 6],
+        [3, 2, ["bb", "bb", "bb"], 6],
+        // 단순 개수 카운팅으로는 a만 2x2임을 처리할 수 없음!
+        [3, 3, ["aab", "aab", "bbb"], 4],
+        // 연쇄 제거 케이스 필요
+        [4, 2, ["bb", "aa", "aa", "bb"], 8],
+        // 프로그래머스 기본 TC들
+        [4, 5, ["CCBDE", "AAADE", "AAABF", "CCBBF"], 14],
         [
             6,
             6,
@@ -65,7 +65,7 @@ function solution(m, n, board) {
             r--;
         }
 
-        return [[r, c], board[r][c]];
+        return [[orgR, c], board[r][c]];
     }
 
     function remove([r, c]) {
@@ -78,21 +78,27 @@ function solution(m, n, board) {
         board[r][c] = "-";
     }
 
-    while (true) {
+    let minR = 0;
+    let loops = 0;
+    while (loops < 10) {
         // check 단계
-        for (let r = 0; r < m - 1; r++) {
+        for (let r = minR; r < m - 1; r++) {
             for (let c = 0; c < n - 1; c++) {
-                const [ltPos, lt] = get(r, c);
+                const ltPos = [r, c];
+                const lt = board[r][c]; // minR을 뒀는데, 이 r을 그보다 위에서 찾으면 중복 제거가 불가능함
                 const [rtPos, rt] = get(r + 1, c);
                 const [lbPos, lb] = get(r, c + 1);
                 const [rbPos, rb] = get(r + 1, c + 1);
 
                 if (lt !== "-" && lt === rt && lt === lb && lt === rb) {
+                    minR = r;
                     // 왜 이게 중복이 되는 거지?
                     // 여기서 한참 또 걸리네...
                     // 뭔가 기준이 있어야 함. 같은 턴에서 중복 체크가 발생함.
                     // 이해함. while을 여러 번 돌 게 아님. 그림 좀 그려보니깐, 한 번 지나간 곳을 다시 체크 안 해도 됨. 그럼 현재의 중복 case는 제거 가능함.
-                    console.log("remove 4!:", lt, ltPos, rtPos, lbPos, rbPos);
+                    console.log(
+                        `minR: ${minR}, lt: ${lt}(${ltPos}), rt: ${rt}(${rtPos}), lb: ${lb}(${lbPos}), rb: ${rb}(${rbPos})`
+                    );
                     console.log(board);
                     remove(ltPos);
                     remove(rtPos);
@@ -109,6 +115,7 @@ function solution(m, n, board) {
             break;
         }
         currRemoved.clear();
+        loops++;
     }
 
     return totalRemoved;
