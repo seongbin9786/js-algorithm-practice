@@ -1,5 +1,9 @@
 import { describe, it, assert } from "vitest";
 
+/*
+1. 조건을 명확히 이해해야 함. 특히, 단일 구현 사이클이 길어지는 경우 정말 명확히 이해해야 함.
+2. 
+*/
 describe.only("3Sum", () => {
     it.each([
         // // 기본
@@ -19,6 +23,17 @@ describe.only("3Sum", () => {
             [-1, 0, 1, 2, -1, -4],
             [
                 [-1, -1, 2],
+                [-1, 0, 1],
+            ],
+        ],
+        // 나의 예외 체크
+        [
+            [3, 2, 1, 0, -1, -2, -3],
+            [
+                [-3, 1, 2],
+                [-2, -1, 3],
+                [-3, 0, 3],
+                [-2, 0, 2],
                 [-1, 0, 1],
             ],
         ],
@@ -54,16 +69,14 @@ function parse(stringArray) {
  * @return {number[][]}
  */
 var threeSum = function (nums) {
-    nums.sort(); // n log n
-    const numIndices = new Map(); // 오름차순 정렬되어 있으려면, nums를 정렬해야 함. 일단 구현 편의를 위해 정렬해둠.
+    const numLastIdxMap = new Map(); // 오름차순 정렬되어 있으려면, nums를 정렬해야 함. 일단 구현 편의를 위해 정렬해둠.
     nums.forEach((v, index) => {
-        const indices = numIndices.get(v) ?? [];
-        indices.push(index);
-        numIndices.set(v, indices);
+        numLastIdxMap.set(v, Math.max(index, numLastIdxMap.get(v) ?? 0));
     });
 
     // n^2
-    // j=0으로 시작하면 중복 생김
+    // i<j<k 를 유지하면 i != j != k
+    // nums에서 정렬이 없어도 되나?
     const combos = new Set();
     for (let i = 0; i < nums.length; i++) {
         for (let j = i + 1; j < nums.length; j++) {
@@ -74,32 +87,23 @@ var threeSum = function (nums) {
             // console.log(
             //     `[${i}, ${j}] ${nums[i]} + ${nums[j]} =>  partnerNum: ${partnerNum}`
             // );
-            let parterNumIndices = numIndices.get(partnerNum);
+            let k = numLastIdxMap.get(partnerNum);
             // console.log("parterNumIndices:", parterNumIndices);
-            if (!parterNumIndices) {
+            if (k === undefined) {
                 continue;
             }
-
-            // index 체크는 꼭 필요함. i<j<k 여야 함
-            // value 체크도 해야 함. Set으로 해야되나? 더 쉬운 방법 = ?
-            // 분명히 쉬운 방법이 있을 거 같은데.. 심지어 순서가 달라도 맞아야 함;
-            for (let k = 0; k < parterNumIndices.length; k++) {
-                const parterIndex = parterNumIndices[k];
-                if (i >= parterIndex || j >= parterIndex) {
-                    continue;
-                }
+            if (i < k && j < k) {
                 const triplet = [nums[i], nums[j], partnerNum]
                     .sort((a, b) => a - b)
-                    .toString(); // NOTE: []가 주변에 붙지 않음.
+                    .toString();
                 combos.add(triplet);
-                break;
             }
         }
     }
 
     const result = [];
     combos.forEach((v) => {
-        console.log("v:", v, parse(v));
+        // console.log("v:", v, parse(v));
         result.push(parse(v));
     });
 
