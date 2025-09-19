@@ -2,9 +2,10 @@ import { describe, it, assert } from "vitest";
 
 describe.only("Longest Substring Without Repeating Characters", () => {
     it.each([
-        ["ab", 1],
-        // ["aa", 2],
-    ])("%i => %i", (input, expected) => {
+        ["ab", 2],
+        ["aa", 1],
+        ["abc", 3],
+    ])("%s => %i", (input, expected) => {
         const result = lengthOfLongestSubstring(input);
         assert.equal(result, expected);
     });
@@ -15,5 +16,15 @@ describe.only("Longest Substring Without Repeating Characters", () => {
  * @return {number}
  */
 var lengthOfLongestSubstring = function (s) {
-    return 1;
+    let globalMax = 0;
+    let currMax = 1;
+    for (let i = 1; i < s.length; i++) {
+        if (s[i - 1] === s[i]) {
+            currMax = 1;
+        } else {
+            currMax++;
+        }
+        globalMax = Math.max(globalMax, currMax);
+    }
+    return globalMax;
 };
