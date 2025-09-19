@@ -6,37 +6,37 @@ import { describe, it, assert } from "vitest";
 */
 describe.only("3Sum", () => {
     it.each([
-        // // 기본
-        [[0, 0, 0], [[0, 0, 0]]],
-        [[-1, 0, 1], [[-1, 0, 1]]],
-        // 정렬 순서 무관 TC
-        [[1, 0, -1], [[-1, 0, 1]]],
-        // 조합이 없는 경우
-        [[1, 2, 3], []],
-        [[-1, -2, -3], []],
-        // 여러 조합이 가능한 경우
-        [[-3, -2, 1, 2, 3], [[-3, 1, 2]]],
+        // // // 기본
+        // [[0, 0, 0], [[0, 0, 0]]],
+        // [[-1, 0, 1], [[-1, 0, 1]]],
+        // // 정렬 순서 무관 TC
+        // [[1, 0, -1], [[-1, 0, 1]]],
+        // // 조합이 없는 경우
+        // [[1, 2, 3], []],
+        // [[-1, -2, -3], []],
+        // // 여러 조합이 가능한 경우
+        // [[-3, -2, 1, 2, 3], [[-3, 1, 2]]],
         // value까지도 조합인 Case
         [[0, 0, 0, 0], [[0, 0, 0]]],
-        // 리트코드 TC
-        [
-            [-1, 0, 1, 2, -1, -4],
-            [
-                [-1, -1, 2],
-                [-1, 0, 1],
-            ],
-        ],
-        // 나의 예외 체크
-        [
-            [3, 2, 1, 0, -1, -2, -3],
-            [
-                [-3, 1, 2],
-                [-2, -1, 3],
-                [-3, 0, 3],
-                [-2, 0, 2],
-                [-1, 0, 1],
-            ],
-        ],
+        // // 리트코드 TC
+        // [
+        //     [-1, 0, 1, 2, -1, -4],
+        //     [
+        //         [-1, -1, 2],
+        //         [-1, 0, 1],
+        //     ],
+        // ],
+        // // 나의 예외 체크
+        // [
+        //     [3, 2, 1, 0, -1, -2, -3],
+        //     [
+        //         [-3, 1, 2],
+        //         [-2, -1, 3],
+        //         [-3, 0, 3],
+        //         [-2, 0, 2],
+        //         [-1, 0, 1],
+        //     ],
+        // ],
     ])("%j => %j", (input, expected) => {
         const result = threeSum(input);
 
@@ -60,10 +60,6 @@ function compareTriple(a, b) {
     return 0;
 }
 
-function parse(stringArray) {
-    return stringArray.split(",").map(Number);
-}
-
 /**
  * @param {number[]} nums
  * @return {number[][]}
@@ -74,38 +70,45 @@ var threeSum = function (nums) {
         numLastIdxMap.set(v, Math.max(index, numLastIdxMap.get(v) ?? 0));
     });
 
+    const usedIdxCombos = new Set();
+    const combos = [];
+
+    function addIfPossible(triplet) {
+        const key = triplet.toString();
+        if (usedIdxCombos.has(key)) {
+            return;
+        }
+        usedIdxCombos.add(key);
+        combos.push(triplet);
+    }
+
     // n^2
-    // i<j<k 를 유지하면 i != j != k
-    // nums에서 정렬이 없어도 되나?
-    const combos = new Set();
+    // i<j<k 를 유지하면 i != j != k 가 가능함. 그래도 중복이 존재하는데, 어떻게 해야 함?
+    // 이미 사용된 조합 같은 걸 만들어야 되나?
+    // order of the output and the order of the triplets does not matter. 조건 활용 필요
+    // 그냥 정렬하고, 0까지만 찾아볼까? -> 0만 있는 경우는 무의미함
+    // 일단 중복 제거가 필요한 거 같은데...
+
     for (let i = 0; i < nums.length; i++) {
         for (let j = i + 1; j < nums.length; j++) {
             if (i === j) {
                 continue;
             }
             const partnerNum = (nums[i] + nums[j]) * -1 + 0; // -0 처리
-            // console.log(
-            //     `[${i}, ${j}] ${nums[i]} + ${nums[j]} =>  partnerNum: ${partnerNum}`
-            // );
+            console.log(
+                `[${i}, ${j}] ${nums[i]} + ${nums[j]} =>  partnerNum: ${partnerNum}`
+            );
             let k = numLastIdxMap.get(partnerNum);
             // console.log("parterNumIndices:", parterNumIndices);
             if (k === undefined) {
                 continue;
             }
             if (i < k && j < k) {
-                const triplet = [nums[i], nums[j], partnerNum]
-                    .sort((a, b) => a - b)
-                    .toString();
-                combos.add(triplet);
+                const triplet = [nums[i], nums[j], partnerNum].sort();
+                addIfPossible(triplet);
             }
         }
     }
 
-    const result = [];
-    combos.forEach((v) => {
-        // console.log("v:", v, parse(v));
-        result.push(parse(v));
-    });
-
-    return result;
+    return combos;
 };
