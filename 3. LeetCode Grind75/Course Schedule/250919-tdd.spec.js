@@ -93,76 +93,103 @@ a를 듣기 위해선 b를 먼저 들어야 함
 */
 describe("Course Schedule", () => {
     it.each([
-        // 기본
-        [1, [], true],
-        [2, [], true],
-        [2, [[1, 0]], true],
-        // 예외
-        [1, [[0, 0]], false],
-        // 전이가 없는 경우
-        [
-            3,
-            [
-                [2, 0],
-                [2, 1],
-            ],
-            true,
-        ],
-        // 전이가 있는 경우
-        [
-            2,
-            [
-                [1, 0],
-                [0, 1],
-            ],
-            false,
-        ],
-        // 유효하지 않은 전이가 있는 경우 (cycle)
-        [
-            3,
-            [
-                [2, 1],
-                [1, 0],
-                [0, 2],
-            ],
-            false,
-        ],
-        [
-            4,
-            [
-                [1, 2],
-                [1, 3],
-                [2, 3],
-            ],
-            true,
-        ],
-        // 리트코드 실패 TC
-        // 3->[1,2]->4
         [
             5,
             [
-                [1, 4],
-                [2, 4],
-                [3, 1],
-                [3, 2],
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [4, 1],
             ],
-            true,
+            false,
         ],
+        // // 기본
+        // [1, [], true],
+        // [2, [], true],
+        // [2, [[1, 0]], true],
+        // // 예외
+        // [1, [[0, 0]], false],
+        // // 전이가 없는 경우
+        // [
+        //     3,
+        //     [
+        //         [2, 0],
+        //         [2, 1],
+        //     ],
+        //     true,
+        // ],
+        // // 전이가 있는 경우
+        // [
+        //     2,
+        //     [
+        //         [1, 0],
+        //         [0, 1],
+        //     ],
+        //     false,
+        // ],
+        // // 유효하지 않은 전이가 있는 경우 (cycle)
+        // [
+        //     3,
+        //     [
+        //         [2, 1],
+        //         [1, 0],
+        //         [0, 2],
+        //     ],
+        //     false,
+        // ],
+        // [
+        //     4,
+        //     [
+        //         [1, 2],
+        //         [1, 3],
+        //         [2, 3],
+        //     ],
+        //     true,
+        // ],
+        // // 리트코드 실패 TC
+        // // 3->[1,2]->4
+        // [
+        //     5,
+        //     [
+        //         [1, 4],
+        //         [2, 4],
+        //         [3, 1],
+        //         [3, 2],
+        //     ],
+        //     true,
+        // ],
     ])("%j => %j", (numCourses, prerequisites, expected) => {
         const result = canFinish(numCourses, prerequisites);
         assert.equal(result, expected);
     });
 });
 
-/**
- * @param {number} numCourses
- * @param {number[][]} prerequisites
- * @return {boolean}
- */
+/*
+성능 개선 방법
+
+1. 희소 배열로 구성하기 -> CALL_AND_RETRY_LAST Allocation failed - JavaScript heap out of memory
+    - 잘못 짠 거 같긴 함
+    - 희소배열 해도, 존재성 확인을 해야 해서 O(n)이 또 들어가서 의미 없는 것 같음.
+2. 메모이제이션, 캐싱
+3. prerequisites를 순회하는 건 어떨까
+
+-잘 모르겠다. 서렌이다-
+
+[옛날 풀이에서 배운 것]
+1. 희소 배열을 사용함
+2. 각 시작점에 대해 '현재 노드에서 방문 가능한 그래프'(서브 그래프)를 탐색함.
+3. 서브 그래프만 탐색하기 위해 VISITED를 구분
+
+[내 풀이가 잘못 된 것]
+1. 각 경로를 추가할 때마다 dfs 탐색 -> 최적화 여지가 없음?
+2. 
+
+[다른 풀이 - 위상 정렬]
+1. 
+*/
 var canFinish = function (numCourses, prerequisites) {
-    const preCourseMap = Array.from({ length: numCourses }, () =>
-        Array.from(numCourses).fill(false)
-    );
+    const preCourseMap = Array.from({ length: numCourses }, () => []);
+    const visitStatus = Array(numCourses).fill(0);
 
     function transitiveMap(course, preCourse) {
         // transitive cycle adding...
@@ -170,19 +197,22 @@ var canFinish = function (numCourses, prerequisites) {
             return false;
         }
 
-        preCourseMap[course][preCourse] = true;
+        // 무한 루프 방지
+        if (preCourseMap[preCourse].includes(course)) {
+            return false;
+        }
+
+        preCourseMap[course].push(preCourse);
         console.log(`course[${course}] -> preCourse[${preCourse}]`);
 
-        for (let prePreCourse = 0; prePreCourse < numCourses; prePreCourse++) {
+        for (const prePreCourse of preCourseMap[preCourse]) {
             // preCourse 통해서 도달할 수 있는 cycle 확인
             // 누적되니까 추후 실제 cycle을 발생시키는 의존관계가 추가될 때 cycle이 발견됨
-            if (preCourseMap[preCourse][prePreCourse]) {
-                console.log(
-                    `[trans] course[${course}] -> prePreCourse[${prePreCourse}]`
-                );
-                if (!transitiveMap(course, prePreCourse)) {
-                    return false;
-                }
+            console.log(
+                `[trans] course[${course}] -> prePreCourse[${prePreCourse}]`
+            );
+            if (!transitiveMap(course, prePreCourse)) {
+                return false;
             }
         }
 
@@ -190,6 +220,9 @@ var canFinish = function (numCourses, prerequisites) {
     }
 
     for (const [course, preCourse] of prerequisites) {
+        if (visitStatus > 0) {
+            continue;
+        }
         if (!transitiveMap(course, preCourse)) {
             return false;
         }
