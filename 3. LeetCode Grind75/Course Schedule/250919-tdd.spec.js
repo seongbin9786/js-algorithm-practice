@@ -82,6 +82,14 @@ All the pairs prerequisites[i] are unique.
             - 노드 방문은 체크만 할 뿐
         - 흠...?
         - 
+
+[그 다음의 접근]
+되게 기본적인 TC인데 안 됨
+기존 로직으로는 구현 불가능함
+a를 듣기 위해선 b를 먼저 들어야 함
+근데, b를 듣기 위해서 a를 들어야 함?
+--> 하.. 이거 결국 모든 Case를 만들 수밖예 없겠네
+--> 전이가 될 때마다 Case를 만들고, [a,a]를 만드는 경우에 실패하게 하면 됨.
 */
 describe("Course Schedule", () => {
     it.each([
@@ -119,6 +127,27 @@ describe("Course Schedule", () => {
             ],
             false,
         ],
+        [
+            4,
+            [
+                [1, 2],
+                [1, 3],
+                [2, 3],
+            ],
+            true,
+        ],
+        // 리트코드 실패 TC
+        // 3->[1,2]->4
+        [
+            5,
+            [
+                [1, 4],
+                [2, 4],
+                [3, 1],
+                [3, 2],
+            ],
+            true,
+        ],
     ])("%j => %j", (numCourses, prerequisites, expected) => {
         const result = canFinish(numCourses, prerequisites);
         assert.equal(result, expected);
@@ -131,15 +160,39 @@ describe("Course Schedule", () => {
  * @return {boolean}
  */
 var canFinish = function (numCourses, prerequisites) {
-    const visited = Array(numCourses).fill(false);
+    const preCourseMap = Array.from({ length: numCourses }, () =>
+        Array.from(numCourses).fill(false)
+    );
 
-    for (const [a, b] of prerequisites) {
-        if (a === b || (visited[a] && visited[b])) {
+    function transitiveMap(course, preCourse) {
+        // transitive cycle adding...
+        if (course === preCourse) {
             return false;
         }
 
-        visited[a] = true;
-        visited[b] = true;
+        preCourseMap[course][preCourse] = true;
+        console.log(`course[${course}] -> preCourse[${preCourse}]`);
+
+        for (let prePreCourse = 0; prePreCourse < numCourses; prePreCourse++) {
+            // preCourse 통해서 도달할 수 있는 cycle 확인
+            // 누적되니까 추후 실제 cycle을 발생시키는 의존관계가 추가될 때 cycle이 발견됨
+            if (preCourseMap[preCourse][prePreCourse]) {
+                console.log(
+                    `[trans] course[${course}] -> prePreCourse[${prePreCourse}]`
+                );
+                if (!transitiveMap(course, prePreCourse)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    for (const [course, preCourse] of prerequisites) {
+        if (!transitiveMap(course, preCourse)) {
+            return false;
+        }
     }
 
     return true;
