@@ -25,6 +25,43 @@ board는 길이 n인 문자열 m개의 배열로 주어진다. 블록을 나타�
 입력으로 주어진 판 정보를 가지고 몇 개의 블록이 지워질지 출력하라.
 */
 
+/*
+(포기: 행<->열 전환 시도..)
+
+    // 높이가 n, 너비가 m => 컬럼 개수 m
+    const columns = Array.from({ length: m }, () => Array(n).fill(""));
+    board.forEach((row, rowIndex) => {
+        console.log("row:", row);
+        for (let columnIdx = 0; columnIdx < row.length; columnIdx++) {
+            columns[columnIdx][rowIndex] = row[columnIdx];
+        }
+    });
+
+    row: TTTANT
+    row: RRFACC
+    row: RRRFCC
+    row: TRRRAA
+    row: TTMMMF
+    row: TMMTTJ
+
+    // 이렇게 보면 좀 어려운데...
+    // [r][c]를 바꿔버리면 '선'대칭인가?
+
+    // 천장 -> 바닥
+    // 이 기준으로 4개씩 잘라도 되긴 할 듯? (좌측 상단 기준으로 보고.)
+    columns: [
+        [ 'T', 'R', 'R', 'T', 'T', 'T' ],
+        [ 'T', 'R', 'R', 'R', 'T', 'M' ],
+        [ 'T', 'F', 'R', 'R', 'M', 'M' ],
+        [ 'A', 'A', 'F', 'R', 'M', 'T' ],
+        [ 'N', 'C', 'C', 'A', 'M', 'T' ],
+        [ 'T', 'C', 'C', 'A', 'F', 'J' ]
+    ]
+
+    이거 너무 어렵다 하지말자
+    그냥 정상 배열로 갑시다.
+*/
+
 import { describe, it, assert } from "vitest";
 
 describe("프렌즈 4블록 (카카오 Lv2) / 예외 풀이 실패 (TC 3개 실패)", () => {
@@ -55,21 +92,22 @@ describe("프렌즈 4블록 (카카오 Lv2) / 예외 풀이 실패 (TC 3개 실�
     });
 });
 
+/*
+[풀이]
+1. '블록 내리기 단계'가 O(m*n*m) 이어서 느린데 (하단에서 상단까지 순회 시 평균 (n+1)/2) 이것말고는 방법이 없어 보임 (전체 시간 복잡도 = O(m*n*m*부수는최대횟수)
+2. (y,x) <-> (x,y)로 대칭시켜 풀까했는데 대칭까지는 쉬운데 그 후 계속 행/열을 반대로 생각해야 돼서 포기. 예상보다 난도가 높았음.
+3. '블록 내리기 단계'는 바닥부터 천장까지 순회하면서, '삭제된 블록'을 만나면 '정상 블록'을 같은 열에서 찾아서, '삭제된 블록' 위치에 '정상 블록'을 할당하고, 기존 '정상 블록'을 '삭제된 블록'으로 만들면 됨. 이건 최초로 찾은 블록에 대해서 실행하면 되고, 계속해서 행단위로 올라가기 때문에 무조건 전체 블록을 끌어내리게 됨
+
+*/
 function solution(m, n, board) {
     board = [...board].map((row) => [...row]);
+
+    // console.log("board:", board);
+
     let totalRemoved = 0;
     const currRemoved = new Set();
 
-    function get(orgR, c) {
-        let r = orgR;
-        while (r > 0 && board[r][c] === "-") {
-            r--;
-        }
-
-        return [[r, c], board[r][c]];
-    }
-
-    function remove([r, c]) {
+    function remove(r, c) {
         currRemoved.add(r * 100 + c);
     }
 
@@ -79,45 +117,56 @@ function solution(m, n, board) {
         board[r][c] = "-";
     }
 
-    let minR = 0;
     while (true) {
-        // check 단계
-        for (let r = minR; r < m - 1; r++) {
+        // 2x2 체크 단계
+        for (let r = 0; r < m - 1; r++) {
             for (let c = 0; c < n - 1; c++) {
-                const [ltPos, lt] = get(r, c);
-                const [lbPos, rt] = get(r + 1, c);
-                const [rtPos, lb] = get(r, c + 1);
-                const [rbPos, rb] = get(r + 1, c + 1);
+                const lt = board[r][c];
+                const rt = board[r + 1][c];
+                const lb = board[r][c + 1];
+                const rb = board[r + 1][c + 1];
 
                 if (lt !== "-" && lt === rt && lt === lb && lt === rb) {
-                    minR = r;
-                    // console.log(
-                    //     `minR: ${minR}, lt: ${lt}(${ltPos}), rt: ${rt}(${rtPos}), lb: ${lb}(${lbPos}), rb: ${rb}(${rbPos})`
-                    // );
+                    // console.log(`removing 2x2: [${r}][${c}](=${lt})`);
                     // console.log(board);
 
-                    // 문제점: 같은 턴에서 중복 체크가 발생함.
-                    // 그림 좀 그려보니깐 이해함. 한 번 지나간 곳을 다시 체크 안 해도 됨. (O)
-                    // while을 여러 번 돌 게 아님. 그럼 현재의 중복 case는 제거 가능함. (X)
-                    if (ltPos[0] === lbPos[0] || rtPos[0] === rbPos[0]) {
-                        continue; // 둘이 같은 x로 resolve하면 2x2가 아님
-                    }
-
-                    remove(ltPos);
-                    remove(rtPos);
-                    remove(lbPos);
-                    remove(rbPos);
+                    remove(r, c);
+                    remove(r + 1, c);
+                    remove(r, c + 1);
+                    remove(r + 1, c + 1);
                 }
             }
         }
 
+        // 실제 삭제 단계
         currRemoved.forEach(markRemoved);
+        // console.log("after remove:", board);
+
         // console.log("currRemoved.size:", currRemoved.size);
         totalRemoved += currRemoved.size;
         if (currRemoved.size === 0) {
             break;
         }
         currRemoved.clear();
+
+        // 박스 내리기 단계
+        // 바닥에서 천장 순서로 체크
+        // O(m*n*n) - 느린데, 이것 말고 방법이 없음.
+        for (let r = m - 1; r >= 0; r--) {
+            for (let c = 0; c < n; c++) {
+                if (board[r][c] === "-") {
+                    let validR = r;
+                    while (validR >= 0 && board[validR][c] === "-") {
+                        validR--;
+                    }
+                    if (validR >= 0) {
+                        board[r][c] = board[validR][c];
+                        board[validR][c] = "-";
+                    }
+                }
+            }
+        }
+        // console.log("after gravity:", board);
     }
 
     return totalRemoved;
