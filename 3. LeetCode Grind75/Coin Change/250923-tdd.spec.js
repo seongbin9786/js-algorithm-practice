@@ -33,13 +33,23 @@ import { describe, it, assert } from "vitest";
         - 그 중에서 합계랑 일치하면 min을 갱신
         - 합계가 일치하는 경우가 없으면 -1을 반환하게 됨
 
+5. 캐싱을 구현하는 법
+    - 이미 다녀온 경우 그 개수를 보관하면 됨
+    - 문제는, 더 적은 개수가 나중에 발견될 수도 있다는 점임
+    - 그럼 기존 연산이 덜 최적이라는 게 되지 않을까?
+    - 작업 순서 조절이 필요하다...
+
+6. 그리면서 생각해봄
+    - [8,7,3,1], amount=10일 때, 그냥 무작정 합 = 1~10 인 최소 코인을 다 구할 게 아님.
+    - amount = min(amount가 각각 (10-8),(10-7),(10-3),(10-1)일 때의 코인 개수) + 1임
+    - DFS로 방문하면, 모든 방문에 대해 최솟값부터 min을 계산하기 때문에 모든 방문에 대해 min 값이 보장됨
 */
 describe("Course Schedule", () => {
     it.each([
         [[1, 2, 5], 11, 3],
         [[8, 7, 3, 1], 10, 2], // 이것도 잘 됨
         [[2], 3, -1],
-        [[1], 0, -1],
+        [[1], 0, 0],
     ])("%j => %j", (coins, amount, expected) => {
         const result = coinChange(coins, amount);
         assert.equal(result, expected);
@@ -54,29 +64,41 @@ describe("Course Schedule", () => {
 var coinChange = function (coins, amount) {
     // 예외 처리
     if (amount === 0) {
-        return -1;
+        return 0;
     }
 
-    coins.sort((a, b) => a - b); // 혹시모르니 오름차순 정렬 해둠
+    // 코인 순회 시 amount가 coin보다 작으면 멈출 수 있게 미리 정렬
+    coins.sort((a, b) => a - b);
 
-    let minCoins = Infinity;
+    // 초기값 설정 - amount = coin이면 개수 1
+    const minCoinCount = Array(amount + 1).fill(Infinity);
+    coins.forEach((coin) => {
+        minCoinCount[coin] = 1;
+    });
 
-    function go(currSum, coinCount) {
-        console.log(`go(${currSum},${coinCount})`);
-        if (currSum > amount) {
-            return;
+    function getMinCount(amount) {
+        if (minCoinCount[amount] < Infinity) {
+            console.log("eary return for ", amount);
+            return minCoinCount[amount];
         }
-        if (currSum === amount) {
-            minCoins = Math.min(minCoins, coinCount);
-            return;
-        }
-
+        console.log(`go(${amount})`);
         for (const coin of coins) {
-            go(currSum + coin, coinCount + 1);
+            if (amount < coin) {
+                break;
+            }
+            const subAmount = amount - coin;
+            console.log("checking:", subAmount);
+            const subAmountCount = getMinCount(subAmount);
+            minCoinCount[amount] = Math.min(
+                minCoinCount[amount],
+                subAmountCount + 1
+            );
         }
+
+        return minCoinCount[amount];
     }
 
-    go(0, 0);
+    getMinCount(amount);
 
-    return minCoins === Infinity ? -1 : minCoins;
+    return minCoinCount[amount] === Infinity ? -1 : minCoinCount[amount];
 };
