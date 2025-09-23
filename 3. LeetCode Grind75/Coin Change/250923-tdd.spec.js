@@ -43,6 +43,11 @@ import { describe, it, assert } from "vitest";
     - [8,7,3,1], amount=10일 때, 그냥 무작정 합 = 1~10 인 최소 코인을 다 구할 게 아님.
     - amount = min(amount가 각각 (10-8),(10-7),(10-3),(10-1)일 때의 코인 개수) + 1임
     - DFS로 방문하면, 모든 방문에 대해 최솟값부터 min을 계산하기 때문에 모든 방문에 대해 min 값이 보장됨
+
+7. TLE가 뜨는데 어떻게 더 최적화할지 모르겠음
+    - 구현 오류였음.
+    - 계산 불가능한 값도 존재하는데 처리가 누락됨 -> (-1), INF로 구분하였음.
+
 */
 describe("Course Schedule", () => {
     it.each([
@@ -50,6 +55,7 @@ describe("Course Schedule", () => {
         [[8, 7, 3, 1], 10, 2], // 이것도 잘 됨
         [[2], 3, -1],
         [[1], 0, 0],
+        [[186, 419, 83, 408], 6249, 20],
     ])("%j => %j", (coins, amount, expected) => {
         const result = coinChange(coins, amount);
         assert.equal(result, expected);
@@ -62,39 +68,43 @@ describe("Course Schedule", () => {
  * @return {number}
  */
 var coinChange = function (coins, amount) {
-    // 예외 처리
-    if (amount === 0) {
-        return 0;
-    }
-
     // 코인 순회 시 amount가 coin보다 작으면 멈출 수 있게 미리 정렬
     coins.sort((a, b) => a - b);
 
     // 초기값 설정 - amount = coin이면 개수 1
-    const minCoinCount = Array(amount + 1).fill(Infinity);
+    // -1 = 아직 미방문이어서 계산 필요.
+    // INF = 방문했는데 계산 불가능
+    const minCoinCount = Array(amount + 1).fill(-1);
+    minCoinCount[0] = 0;
     coins.forEach((coin) => {
         minCoinCount[coin] = 1;
     });
 
     function getMinCount(amount) {
-        if (minCoinCount[amount] < Infinity) {
-            console.log("eary return for ", amount);
+        // console.log(`getMinCount(${amount})`);
+
+        // 이미 계산되어 있음.
+        if (minCoinCount[amount] === Infinity || minCoinCount[amount] >= 0) {
             return minCoinCount[amount];
         }
-        console.log(`go(${amount})`);
+
+        // 직접 계산해야 함.
+        let min = Infinity;
         for (const coin of coins) {
             if (amount < coin) {
                 break;
             }
+            // 값이 있으면 이미 최소임
             const subAmount = amount - coin;
-            console.log("checking:", subAmount);
-            const subAmountCount = getMinCount(subAmount);
-            minCoinCount[amount] = Math.min(
-                minCoinCount[amount],
-                subAmountCount + 1
-            );
+            const subAmountCount =
+                minCoinCount[subAmount] >= 0
+                    ? minCoinCount[subAmount]
+                    : getMinCount(subAmount);
+            min = Math.min(min, subAmountCount + 1);
         }
 
+        // console.log(`minCoinCount[${amount}]=${min}`);
+        minCoinCount[amount] = min;
         return minCoinCount[amount];
     }
 
