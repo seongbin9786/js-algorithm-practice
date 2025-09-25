@@ -47,6 +47,10 @@ abc123
 describe("불량 사용자 (Lv.3)", () => {
     it.each([
         [["a"], ["*"], 1],
+        [["a", "b"], ["*"], 1],
+        [["a", "b", "ab", "ba"], ["a", "a*"], 2],
+        // 2개 이상의 bannedId에 걸릴 수 있는 상황
+        // [["a"], ["a", "*"], 1],
         // [
         //     ["frodo", "fradi", "crodo", "abc123", "frodoc"],
         //     ["fr*d*", "abc1**"],
@@ -68,6 +72,41 @@ describe("불량 사용자 (Lv.3)", () => {
     });
 });
 
+function getAsteriskIndices(bannedId) {
+    const asteriskIndices = [];
+    for (let i = 0; i < bannedId.length; i++) {
+        if (bannedId.charAt(i) === "*") {
+            asteriskIndices.push(i);
+        }
+    }
+    return asteriskIndices;
+}
+
 function solution(userIds, bannedIds) {
-    return 1;
+    const matchedUserIds = bannedIds.map((bannedId) => {
+        const noMask = bannedId.split("*").join("");
+        const asteriskIndices = getAsteriskIndices(bannedId);
+        console.log(
+            `bannedId: ${bannedId}, asteriskIndices: ${asteriskIndices}, noMask: [${noMask}]`
+        );
+        const targetUserIds = userIds.filter((userId) => {
+            if (userId.length !== bannedId.length) {
+                return false;
+            }
+            const chars = [...userId];
+            asteriskIndices.forEach((idx) => {
+                chars[idx] = "";
+            });
+            console.log(
+                `checking: nomask-chars: [${chars.join("")}], ${
+                    chars.join("") === noMask
+                }`
+            );
+            return chars.join("") === noMask;
+        });
+
+        return targetUserIds;
+    });
+
+    return matchedUserIds.length;
 }
