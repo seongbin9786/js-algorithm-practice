@@ -40,32 +40,33 @@ abc123
     - 매번 확인하는 수밖에 없음
         - 우선 길이로 비교하고, *로 slice하고 합쳤을 때 똑같으면 매칭
 3. 어떻게든 매칭은 구한다고 치면, 각 '불량 아이디' 별 일치하는 아이디 숫자를 세고, 조합 구하면 됨
-    - 주의할 점: 특정 아이디가 여러 불량 아이디에 매칭되는 경우에 중복 포함되면 안 됨. 그냥 곱셈으로는 불가능
-    - 결국 직접 조합 구해야 함 (백트래킹)
-
+    - 주의할 점: 특정 아이디가 여러 불량 아이디에 매칭되는 경우에 중복 포함되면 안 됨. 개별로 구하고, 곱셈해서 구할 수 없음.
+    - 그냥 루프로 구하면 됨. '조합' 보다는 그냥 조건에 맞는 것 단순 필터링..
 */
 describe("불량 사용자 (Lv.3)", () => {
     it.each([
         [["a"], ["*"], 1],
         [["a", "b"], ["*"], 1],
         [["a", "b", "ab", "ba"], ["a", "a*"], 2],
+        [["aaa", "aba", "aac", "aca"], ["a*a"], 1],
         // 2개 이상의 bannedId에 걸릴 수 있는 상황
-        // [["a"], ["a", "*"], 1],
-        // [
-        //     ["frodo", "fradi", "crodo", "abc123", "frodoc"],
-        //     ["fr*d*", "abc1**"],
-        //     2,
-        // ],
-        // [
-        //     ["frodo", "fradi", "crodo", "abc123", "frodoc"],
-        //     ["*rodo", "*rodo", "******"],
-        //     2,
-        // ],
-        // [
-        //     ["frodo", "fradi", "crodo", "abc123", "frodoc"],
-        //     ["fr*d*", "*rodo", "******", "******"],
-        //     3,
-        // ],
+        [["a"], ["a", "*"], 1],
+        // 프로그래머스 TC
+        [
+            ["frodo", "fradi", "crodo", "abc123", "frodoc"],
+            ["fr*d*", "abc1**"],
+            2,
+        ],
+        [
+            ["frodo", "fradi", "crodo", "abc123", "frodoc"],
+            ["*rodo", "*rodo", "******"],
+            2,
+        ],
+        [
+            ["frodo", "fradi", "crodo", "abc123", "frodoc"],
+            ["fr*d*", "*rodo", "******", "******"],
+            3,
+        ],
     ])("%j => %j", (userIds, bannedIds, expected) => {
         const result = solution(userIds, bannedIds);
         assert.deepEqual(result, expected);
@@ -82,31 +83,46 @@ function getAsteriskIndices(bannedId) {
     return asteriskIndices;
 }
 
+function removeCharsAtAsterisk(target, asteriskIndices) {
+    const chars = [...target];
+    asteriskIndices.forEach((idx) => {
+        chars[idx] = "";
+    });
+    return chars.join("");
+}
+
 function solution(userIds, bannedIds) {
-    const matchedUserIds = bannedIds.map((bannedId) => {
-        const noMask = bannedId.split("*").join("");
+    const bannedIdCombos = new Set();
+
+    // 1. 각 bannedId에 대응되는 userId들을 모두 찾는다.
+    // 2. (1)을 정렬해서 직렬화해 Set에 넣는다.
+    // 3. (2)의 Set의 크기를 반환하면 '조합의 개수'를 구할 수 있다.
+    bannedIds.forEach((bannedId) => {
+        const noMaskBannedId = bannedId.split("*").join("");
         const asteriskIndices = getAsteriskIndices(bannedId);
         console.log(
-            `bannedId: ${bannedId}, asteriskIndices: ${asteriskIndices}, noMask: [${noMask}]`
+            `bannedId: ${bannedId}, asteriskIndices: ${asteriskIndices}, noMask: [${noMaskBannedId}]`
         );
-        const targetUserIds = userIds.filter((userId) => {
+        const matchedUserIds = userIds.filter((userId) => {
             if (userId.length !== bannedId.length) {
                 return false;
             }
-            const chars = [...userId];
-            asteriskIndices.forEach((idx) => {
-                chars[idx] = "";
-            });
+            const noMaskUserId = removeCharsAtAsterisk(userId, asteriskIndices);
             console.log(
-                `checking: nomask-chars: [${chars.join("")}], ${
-                    chars.join("") === noMask
+                `checking: nomask-chars: [${noMaskUserId}], ${
+                    noMaskUserId === noMaskBannedId
                 }`
             );
-            return chars.join("") === noMask;
+            return noMaskUserId === noMaskBannedId;
         });
 
-        return targetUserIds;
+        console.log("adding combo:", matchedUserIds);
+
+        // 여기서 중복될 수도 있기 때문에 직렬화
+        return bannedIdCombos.add(
+            matchedUserIds.sort((a, b) => a - b).toString()
+        );
     });
 
-    return matchedUserIds.length;
+    return bannedIdCombos.size;
 }
