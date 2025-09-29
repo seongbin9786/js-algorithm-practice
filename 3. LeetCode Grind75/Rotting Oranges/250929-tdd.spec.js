@@ -14,6 +14,7 @@ import { describe, it, assert } from "vitest";
 */
 describe("Rotting Oranges", () => {
     it.each([
+        // 가장 기초적인 TC
         [[[0]], 0],
         [[[1]], -1],
         [
@@ -37,9 +38,90 @@ describe("Rotting Oranges", () => {
             ],
             -1,
         ],
+        [
+            [
+                [2, 1],
+                [1, 0],
+            ],
+            1,
+        ],
+        // 여러 번 이동해야 하는 TC
+        [
+            [
+                [2, 1, 1],
+                [1, 1, 1],
+                [1, 1, 1],
+            ],
+            4,
+        ],
+        [
+            [
+                [2, 1, 1],
+                [0, 0, 1],
+                [1, 1, 1],
+            ],
+            6,
+        ],
+        [
+            [
+                [1, 1, 1],
+                [1, 2, 1],
+                [1, 1, 1],
+            ],
+            2,
+        ],
+        [
+            [
+                [0, 1, 0],
+                [1, 2, 1],
+                [0, 1, 0],
+            ],
+            1,
+        ],
+        [
+            [
+                [2, 1, 0],
+                [1, 0, 1],
+                [0, 1, 2],
+            ],
+            1,
+        ],
+        [
+            [
+                [2, 0, 0],
+                [0, 0, 0],
+                [0, 0, 2],
+            ],
+            0,
+        ],
+        [
+            [
+                [2, 0, 0],
+                [0, 0, 0],
+                [0, 0, 1],
+            ],
+            -1,
+        ],
+        // 리트코드 TC
+        [
+            [
+                [2, 1, 1],
+                [1, 1, 0],
+                [0, 1, 1],
+            ],
+            4,
+        ],
+        [
+            [
+                [2, 1, 1],
+                [0, 1, 1],
+                [1, 0, 1],
+            ],
+            -1,
+        ],
     ])("%j => %i", (grid, expected) => {
         const result = orangesRotting(grid);
-        assert.deepEqual(result, expected);
+        assert.equal(result, expected);
     });
 });
 
@@ -48,12 +130,61 @@ describe("Rotting Oranges", () => {
  * @return {number}
  */
 var orangesRotting = function (grid) {
-    for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[0].length; x++) {
-            if (grid[y][x] === 1) {
-                return -1;
+    const MAX_Y = grid.length;
+    const MAX_X = grid[0].length;
+
+    const queue = [];
+    const visited = Array.from({ length: MAX_Y }, () =>
+        Array(MAX_X).fill(false)
+    );
+
+    let totalOranges = 0;
+    let visitedOranges = 0;
+    let maxMinutes = 0;
+
+    for (let y = 0; y < MAX_Y; y++) {
+        for (let x = 0; x < MAX_X; x++) {
+            if (grid[y][x] > 0) {
+                totalOranges++;
+            }
+            if (grid[y][x] === 2) {
+                console.log(`pushing: ${y},${x}`);
+                queue.push({ y, x, minutes: 0 });
             }
         }
     }
-    return 0;
+
+    const dx = [-1, 1, 0, 0];
+    const dy = [0, 0, -1, 1];
+    while (queue.length > 0) {
+        const { y, x, minutes } = queue.shift();
+        if (visited[y][x]) {
+            continue; // 중첩되면 중복 방문이 가능함.
+        }
+        visited[y][x] = true;
+        console.log(`visiting ${y},${x}`);
+        visitedOranges++;
+        maxMinutes = Math.max(maxMinutes, minutes);
+
+        for (let i = 0; i < 4; i++) {
+            const ny = y + dy[i];
+            const nx = x + dx[i];
+            if (
+                ny >= 0 &&
+                ny < MAX_Y &&
+                nx >= 0 &&
+                nx < MAX_X &&
+                !visited[ny][nx] &&
+                grid[ny][nx] === 1
+            ) {
+                queue.push({ y: ny, x: nx, minutes: maxMinutes + 1 });
+            }
+        }
+    }
+
+    if (totalOranges === visitedOranges) {
+        return maxMinutes;
+    }
+
+    return -1;
 };
