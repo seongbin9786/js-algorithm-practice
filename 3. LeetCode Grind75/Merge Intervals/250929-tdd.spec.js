@@ -33,6 +33,48 @@ describe("Merge Intervals", () => {
                 [1, 1],
             ],
         ],
+        // 비정렬 TC
+        [
+            [
+                [1, 2],
+                [0, 0],
+            ],
+            [
+                [0, 0],
+                [1, 2],
+            ],
+        ],
+        // 기본 TC들
+        [
+            [
+                [0, 0],
+                [1, 1],
+                [2, 2],
+            ],
+            [
+                [0, 0],
+                [1, 1],
+                [2, 2],
+            ],
+        ],
+        [
+            [
+                [0, 0],
+                [0, 1],
+                [1, 1],
+                [1, 2],
+                [2, 2],
+            ],
+            [[0, 2]],
+        ],
+        [
+            [
+                [0, 100],
+                [1, 99],
+                [2, 98],
+            ],
+            [[0, 100]],
+        ],
     ])("%j => %i", (intervals, expected) => {
         const result = merge(intervals);
         assert.deepEqual(result, expected);
@@ -47,6 +89,14 @@ var merge = function (intervals) {
     if (intervals.length === 1) {
         return intervals;
     }
+
+    intervals.sort((a, b) => {
+        if (a[0] === b[0]) {
+            return a[1] - b[1];
+        }
+
+        return a[0] - b[0];
+    });
 
     console.log(`intervals: ${intervals}`);
     const result = [];
