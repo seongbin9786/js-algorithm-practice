@@ -9,7 +9,7 @@ import { describe, it, assert } from "vitest";
 [풀이]
 1. 1칸씩 전진해야 하므로 BFS로 풀어야 함.
 2. 2차원 배열을 순회해 Q에 넣되, {y,x,minutes:0}로 넣음, 1,2의 전체 개수 totalCount를 구함
-3. Q에서 노드를 뺄 때마다 visitMinutes = max(minutes)하고, visitCount++, 주위의 1을 visited = true하고 Q에 넣음
+3. Q에서 노드를 뺄 때마다 visitMinutes = max(minutes)하고, visitCount++, 주위의 1을 visited = true하고 Q에 넣음 (Q에 넣을 때 minutes + 1 해야 하는 게, 처음 2를 꺼낼 때 minutes=0임)
 4. Q가 빌 때까지 진행 후 visitCount = totalCount 이면 visitMinutes 반환, 아니면 -1 반환
 */
 describe("Rotting Oranges", () => {
