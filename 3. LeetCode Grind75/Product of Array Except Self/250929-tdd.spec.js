@@ -10,7 +10,9 @@ import { describe, it, assert } from "vitest";
 1. 나눗셈 없이 어떻게 풀지? 매번 곱해야 할까? 매번 곱하면 O(n * n)
 2. 0이 하나라도 있다면, 걔 빼고는 계산 불필요함
 3. 0이 2개 이상 있다면, 다 0임
-4. 0이 없다면? (답 없는 상태)
+4. 0이 없으면, 제대로 계산 필요함.
+    - [1, 1...n] 구간과 [1...n-1, n] 구간의 곱을 구함. 그러면 i = [1, i-1] * [i+1, n] 으로 구할 수 있음.
+    - 위의 곱은 2n개가 나오며, O(n)으로 구할 수 있음. (diff=[0,n])
 
 */
 describe("Product of Array Except Self", () => {
@@ -28,7 +30,24 @@ describe("Product of Array Except Self", () => {
             [1, 2],
             [2, 1],
         ],
-    ])("%j => %i", (nums, expected) => {
+        // 테스트
+        [
+            [1, 2, 3, 4, 5],
+            [120, 60, 40, 30, 24],
+        ],
+        [
+            [1, 2, 0, 4, 5],
+            [0, 0, 40, 0, 0],
+        ],
+        [
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+        ],
+        [
+            [2, 2],
+            [2, 2],
+        ],
+    ])("%j => %j", (nums, expected) => {
         const result = productExceptSelf(nums);
         assert.deepEqual(result, expected);
     });
@@ -61,7 +80,29 @@ var productExceptSelf = function (nums) {
     }
 
     if (zeros === 0) {
-        // 노답...
+        // [startIdx][endIdx] 로 접근할 수 있게
+        // [start][n] --> 이게 골떄리는데?
+        // [0][end] 이거만 있으면 됨
+        // 그냥, fromStart[0] = nums[0],
+        // fromEnd[nums.length - 1] = nums[nums.length - 1]
+        // 이렇게 쓰는 게 맞을 듯
+        const fromStartTo = Array(nums.length).fill(0);
+        const fromEndTo = Array(nums.length).fill(0);
+
+        fromStartTo[0] = nums[0];
+        fromEndTo[nums.length - 1] = nums[nums.length - 1];
+
+        for (let i = 1; i < nums.length - 1; i++) {
+            fromStartTo[i] = fromStartTo[i - 1] * nums[i];
+            fromEndTo[nums.length - 1 - i] =
+                fromEndTo[nums.length - i] * nums[nums.length - 1 - i]; // from-last-to-last-1 = last * last-1
+        }
+
+        result[0] = fromEndTo[1];
+        result[result.length - 1] = fromStartTo[nums.length - 2];
+        for (let i = 1; i < nums.length - 1; i++) {
+            result[i] = fromStartTo[i - 1] * fromEndTo[i + 1];
+        }
     }
 
     return result;
