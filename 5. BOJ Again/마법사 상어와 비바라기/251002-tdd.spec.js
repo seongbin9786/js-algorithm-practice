@@ -41,7 +41,7 @@ describe("마법사 상어와 비바라기", () => {
                 [0, 0],
             ],
             [[1, 1]],
-            8,
+            8, // 처음 왼쪽 이동해서 +1씩 해서 +4, 각 칸에서 유효한 대각선이 1개씩 있어서 +4
         ],
         [
             3,
@@ -52,7 +52,7 @@ describe("마법사 상어와 비바라기", () => {
                 [0, 0, 0],
             ],
             [[1, 1]],
-            8,
+            4, // 처음 왼쪽 이동해서 +1씩 해서 +4, 각 칸에서 유효한 대각선이 없어서 +0
         ],
         [
             3,
@@ -63,25 +63,39 @@ describe("마법사 상어와 비바라기", () => {
                 [0, 0, 0],
             ],
             [
-                [1, 1], // 구름이 없이 시작함
                 [1, 1],
+                [1, 1], // 물양=4에서 시작하고, 구름이 없이 시작함 -> 해당 라운드 자체는 물 추가가 없음
             ],
-            8,
+            4,
         ],
         [
             3,
+            4,
+            [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+            ],
+            [
+                [1, 1], // 물양=4
+                [1, 1], // 2를 넘는 칸이 없어 구름이 없이 시작하고, 물 추가가 없음
+                [1, 1], // 2를 넘는 칸이 없어 구름이 영원히 생기지 않음
+                [1, 1], // 2를 넘는 칸이 없어 구름이 영원히 생기지 않음
+            ],
+            4,
+        ],
+        [
             3,
+            1,
             [
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0],
+                [2, 2, 2],
+                [2, 2, 2],
+                [2, 2, 2],
             ],
             [
-                [1, 1], // 구름이 없이 시작함
-                [1, 1], // 다시 0으로 초기화됨
-                [1, 1],
+                [1, 1], // 물추가+1씩하고, 대각선으로+6, 이후 구름 없었던 2이상 칸에서 -2씩 해서, 18
             ],
-            8,
+            18,
         ],
         [
             3,
@@ -92,33 +106,33 @@ describe("마법사 상어와 비바라기", () => {
                 [2, 2, 2],
             ],
             [
-                [1, 1], // 31
-                [6, 1],
+                [1, 1], // 18
+                [6, 1], // 좀 복잡한데.. 구름 이동해서 비내리고 대각선 추가해주면 22, 구름 없던 곳에서 2씩 제거하면 20.
             ],
-            36,
+            26,
         ],
         // 백준 TC
-        // [
-        //     5,
-        //     4,
-        //     [
-        //         [0, 0, 1, 0, 2],
-        //         [2, 3, 2, 1, 0],
-        //         [4, 3, 2, 9, 0],
-        //         [1, 0, 2, 9, 0],
-        //         [8, 8, 2, 1, 0],
-        //     ],
-        //     [
-        //         [1, 3],
-        //         [3, 4],
-        //         [8, 1],
-        //         [4, 8],
-        //     ],
-        //     77,
-        // ],
+        [
+            5,
+            4,
+            [
+                [0, 0, 1, 0, 2],
+                [2, 3, 2, 1, 0],
+                [4, 3, 2, 9, 0],
+                [1, 0, 2, 9, 0],
+                [8, 8, 2, 1, 0],
+            ],
+            [
+                [1, 3],
+                [3, 4],
+                [8, 1],
+                [4, 8],
+            ],
+            77,
+        ],
     ])("%i,%i,%j,%j => %i", (N, M, baskets, commands, expected) => {
         const result = magicSharkRain(N, M, baskets, commands);
-        assert.deepEqual(result, expected);
+        assert.equal(result, expected);
     });
 });
 
@@ -149,31 +163,120 @@ function magicSharkRain(N, M, baskets, commands) {
             return pos % N;
         }
         if (pos < 0) {
-            const multiplier = Math.ceil(N / (pos * -1));
-            return N * multiplier - pos;
+            const multiplier = Math.ceil((pos * -1) / N);
+            return N * multiplier + pos;
+        }
+        return pos;
+    }
+
+    // 이걸로 구름 이동 시 사용
+    // TODO: left, right, top, bottom 성분마다 처리하면 더 좋을텐데 방법 = ?
+    function getMovedPos(r, c, dir, s) {
+        switch (dir) {
+            case DIR.TOP:
+                return [circularPos(r - s), c];
+            case DIR.RIGHT_TOP:
+                return [circularPos(r - s), circularPos(c + s)];
+            case DIR.RIGHT:
+                return [r, circularPos(c + s)];
+            case DIR.RIGHT_BOTTOM:
+                return [circularPos(r + s), circularPos(c + s)];
+            case DIR.BOTTOM:
+                return [circularPos(r + s), c];
+            case DIR.LEFT_BOTTOM:
+                return [circularPos(r + s), circularPos(c - s)];
+            case DIR.LEFT:
+                return [r, circularPos(c - s)];
+            case DIR.LEFT_TOP:
+                return [circularPos(r - s), circularPos(c - s)];
         }
     }
 
-    function moveCloud(r, c, dir) {
-        switch (dir) {
-            case DIR.TOP:
-                return [circularPos(r - 1), c];
-            case DIR.RIGHT_TOP:
-                return [circularPos(r - 1), circularPos(c + 1)];
-            case DIR.RIGHT:
-                return [circularPos(r + 1), c];
-            case DIR.RIGHT_BOTTOM:
-                return [circularPos(r + 1), circularPos(c + 1)];
-            case DIR.BOTTOM:
-                return [circularPos(r + 1), c];
-            case DIR.LEFT_BOTTOM:
-                return [circularPos(r + 1), circularPos(c - 1)];
-            case DIR.LEFT:
-                return [r, circularPos(c - 1)];
-            case DIR.LEFT_TOP:
-                return [circularPos(r - 1), circularPos(c - 1)];
+    function getDiagonalPos(r, c) {
+        console.log(`getDiagonalPos: ${r},${c}`);
+        // circular 보정 없이 해야 함
+        return [
+            // DIR.RIGHT_TOP
+            // DIR.RIGHT_BOTTOM
+            // DIR.LEFT_BOTTOM
+            // DIR.LEFT_TOP
+            [r - 1, c + 1],
+            [r + 1, c + 1],
+            [r + 1, c - 1],
+            [r - 1, c - 1],
+        ].filter(([r, c]) => r >= 0 && r < N && c >= 0 && c < N);
+    }
+
+    // 좌하단 2x2 정사각형에서 시작
+    let clouds = [
+        [N - 1, 0],
+        [N - 1, 1],
+        [N - 2, 0],
+        [N - 2, 1],
+    ];
+
+    let prevClouds = new Set();
+
+    console.log(`initial baskets:${JSON.stringify(baskets)}`);
+
+    for (const [dir, shiftDistance] of commands) {
+        console.log(
+            `d:${dir}, s:${shiftDistance}, baskets:${JSON.stringify(
+                baskets
+            )}, clouds:${JSON.stringify(clouds)}`
+        );
+        // 모든 구름이 di 방향으로 si칸 이동한다.
+        clouds = clouds.map(([r, c]) => {
+            const nextPos = getMovedPos(r, c, dir, shiftDistance);
+            console.log(`nextPos: ${nextPos}`);
+            return nextPos;
+        });
+        console.log(`clouds:${JSON.stringify(clouds)}`);
+
+        // 각 구름에서 비가 내려 구름이 있는 칸의 바구니에 저장된 물의 양이 1 증가한다.
+        clouds.forEach(([r, c]) => {
+            baskets[r][c]++;
+        });
+
+        // 구름이 모두 사라진다.
+        // NOTE: 추후 '구름 체크'를 O(n^2)가 되게 하기 위해 체크 로직을 O(1)으로 수행하고자 Set 사용
+        prevClouds = new Set(clouds.map(([r, c]) => `${r},${c}`));
+        clouds = [];
+
+        // 2에서 물이 증가한 칸 (r, c)에 물복사버그 마법을 시전한다.
+        // 물복사버그 마법을 사용하면, 대각선 방향으로 거리가 1인 칸에 물이 있는 바구니의 수만큼 (r, c)에 있는 바구니의 물이 양이 증가한다.
+        // 이때는 이동과 다르게 경계를 넘어가는 칸은 대각선 방향으로 거리가 1인 칸이 아니다.
+        prevClouds.forEach((rAndC) => {
+            const [r, c] = rAndC.split(",").map(Number);
+            const diagonalPos = getDiagonalPos(r, c);
+            const numOfEffectiveDiagonalPos = diagonalPos.filter(
+                ([r, c]) => baskets[r][c] > 0
+            ).length;
+            console.log(
+                `diagonalPos: ${diagonalPos}, numOfEffectiveDiagonalPos: ${numOfEffectiveDiagonalPos}`
+            );
+            baskets[r][c] += numOfEffectiveDiagonalPos;
+        });
+
+        console.log(`[ROUND FIN] baskets:${JSON.stringify(baskets)}`);
+
+        // 바구니에 저장된 물의 양이 2 이상인 모든 칸에 구름이 생기고, 물의 양이 2 줄어든다. 이때 구름이 생기는 칸은 3에서 구름이 사라진 칸이 아니어야 한다.
+        for (let r = 0; r < N; r++) {
+            for (let c = 0; c < N; c++) {
+                if (baskets[r][c] >= 2 && !prevClouds.has(`${r},${c}`)) {
+                    clouds.push([r, c]);
+                    baskets[r][c] -= 2;
+                }
+            }
         }
     }
+
+    const totalWater = baskets.reduce(
+        (sum, row) => sum + row.reduce((sum, curr) => sum + curr, 0),
+        0
+    );
+
+    return totalWater;
 }
 
 function bojRun() {
@@ -190,7 +293,7 @@ function bojRun() {
 
     const commands = [];
     for (let i = N + 1; i < N + M + 1; i++) {
-        baskets.push(input[i].split(" ").map(Number));
+        commands.push(input[i].split(" ").map(Number));
     }
 
     const result = magicSharkRain(N, M, baskets, commands);
