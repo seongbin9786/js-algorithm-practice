@@ -191,65 +191,11 @@ describe("마법사 상어와 비바라기", () => {
 */
 function magicSharkRain(N, M, baskets, commands) {
     // ←, ↖, ↑, ↗, →, ↘, ↓, ↙
-    const DIR = {
-        LEFT: 1,
-        LEFT_TOP: 2,
-        TOP: 3,
-        RIGHT_TOP: 4,
-        RIGHT: 5,
-        RIGHT_BOTTOM: 6,
-        BOTTOM: 7,
-        LEFT_BOTTOM: 8,
-    };
-
-    function circularPos(pos) {
-        if (pos >= N) {
-            return pos % N;
-        }
-        if (pos < 0) {
-            const multiplier = Math.ceil((pos * -1) / N);
-            return N * multiplier + pos;
-        }
-        return pos;
-    }
-
-    // 이걸로 구름 이동 시 사용
-    // TODO: left, right, top, bottom 성분마다 처리하면 더 좋을텐데 방법 = ?
-    function getMovedPos(r, c, dir, s) {
-        switch (dir) {
-            case DIR.TOP:
-                return [circularPos(r - s), c];
-            case DIR.RIGHT_TOP:
-                return [circularPos(r - s), circularPos(c + s)];
-            case DIR.RIGHT:
-                return [r, circularPos(c + s)];
-            case DIR.RIGHT_BOTTOM:
-                return [circularPos(r + s), circularPos(c + s)];
-            case DIR.BOTTOM:
-                return [circularPos(r + s), c];
-            case DIR.LEFT_BOTTOM:
-                return [circularPos(r + s), circularPos(c - s)];
-            case DIR.LEFT:
-                return [r, circularPos(c - s)];
-            case DIR.LEFT_TOP:
-                return [circularPos(r - s), circularPos(c - s)];
-        }
-    }
-
-    function getDiagonalPos(r, c) {
-        console.log(`getDiagonalPos: ${r},${c}`);
-        // circular 보정 없이 해야 함
-        return [
-            // DIR.RIGHT_TOP
-            // DIR.RIGHT_BOTTOM
-            // DIR.LEFT_BOTTOM
-            // DIR.LEFT_TOP
-            [r - 1, c + 1],
-            [r + 1, c + 1],
-            [r + 1, c - 1],
-            [r - 1, c - 1],
-        ].filter(([r, c]) => r >= 0 && r < N && c >= 0 && c < N);
-    }
+    const dx = [-1, -1, 0, 1, 1, 1, 0, -1];
+    const dy = [0, -1, -1, -1, 0, 1, 1, 1];
+    // 좌상단, 우상단, 우하단, 좌하단
+    const dgx = [-1, 1, 1, -1];
+    const dgy = [-1, -1, 1, 1];
 
     // 좌하단 2x2 정사각형에서 시작
     let clouds = [
@@ -263,15 +209,18 @@ function magicSharkRain(N, M, baskets, commands) {
 
     console.log(`initial baskets:${JSON.stringify(baskets)}`);
 
-    for (const [dir, shiftDistance] of commands) {
+    for (const [dir, shfitDist] of commands) {
         console.log(
-            `d:${dir}, s:${shiftDistance}, baskets:${JSON.stringify(
+            `d:${dir}, s:${shfitDist}, baskets:${JSON.stringify(
                 baskets
             )}, clouds:${JSON.stringify(clouds)}`
         );
         // 모든 구름이 di 방향으로 si칸 이동한다.
         clouds = clouds.map(([r, c]) => {
-            const nextPos = getMovedPos(r, c, dir, shiftDistance);
+            // N*s는 무조건 양수가 되게 만들기 위함이다-
+            const nr = (r + dy[dir - 1] * shfitDist + N * shfitDist) % N;
+            const nc = (c + dx[dir - 1] * shfitDist + N * shfitDist) % N;
+            const nextPos = [nr, nc];
             console.log(`nextPos: ${nextPos}`);
             return nextPos;
         });
@@ -292,14 +241,19 @@ function magicSharkRain(N, M, baskets, commands) {
         // 이때는 이동과 다르게 경계를 넘어가는 칸은 대각선 방향으로 거리가 1인 칸이 아니다.
         prevClouds.forEach((rAndC) => {
             const [r, c] = rAndC.split(",").map(Number);
-            const diagonalPos = getDiagonalPos(r, c);
-            const numOfEffectiveDiagonalPos = diagonalPos.filter(
-                ([r, c]) => baskets[r][c] > 0
-            ).length;
-            console.log(
-                `diagonalPos: ${diagonalPos}, numOfEffectiveDiagonalPos: ${numOfEffectiveDiagonalPos}`
-            );
-            baskets[r][c] += numOfEffectiveDiagonalPos;
+            for (let i = 0; i < 4; i++) {
+                const dgr = r + dgy[i];
+                const dgc = c + dgx[i];
+                if (
+                    dgr >= 0 &&
+                    dgr < N &&
+                    dgc >= 0 &&
+                    dgc < N &&
+                    baskets[dgr][dgc] > 0
+                ) {
+                    baskets[r][c]++;
+                }
+            }
         });
 
         // 바구니에 저장된 물의 양이 2 이상인 모든 칸에 구름이 생기고, 물의 양이 2 줄어든다. 이때 구름이 생기는 칸은 3에서 구름이 사라진 칸이 아니어야 한다.
@@ -311,7 +265,6 @@ function magicSharkRain(N, M, baskets, commands) {
                 }
             }
         }
-
         console.log(`[ROUND FIN] baskets:${JSON.stringify(baskets)}`);
     }
 
