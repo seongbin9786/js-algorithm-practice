@@ -130,6 +130,50 @@ describe("마법사 상어와 비바라기", () => {
             ],
             77,
         ],
+        [
+            5,
+            8,
+            [
+                [0, 0, 1, 0, 2],
+                [2, 3, 2, 1, 0],
+                [0, 0, 2, 0, 0],
+                [1, 0, 2, 0, 0],
+                [0, 0, 2, 1, 0],
+            ],
+            [
+                [1, 9],
+                [2, 8],
+                [3, 7],
+                [4, 6],
+                [5, 5],
+                [6, 4],
+                [7, 3],
+                [8, 2],
+            ],
+            41,
+        ],
+        [
+            5,
+            8,
+            [
+                [100, 100, 100, 100, 100],
+                [100, 100, 100, 100, 100],
+                [100, 100, 100, 100, 100],
+                [100, 100, 100, 100, 100],
+                [100, 100, 100, 100, 100],
+            ],
+            [
+                [8, 1],
+                [7, 1],
+                [6, 1],
+                [5, 1],
+                [4, 1],
+                [3, 1],
+                [2, 1],
+                [1, 1],
+            ],
+            2657,
+        ],
     ])("%i,%i,%j,%j => %i", (N, M, baskets, commands, expected) => {
         const result = magicSharkRain(N, M, baskets, commands);
         assert.equal(result, expected);
@@ -258,8 +302,6 @@ function magicSharkRain(N, M, baskets, commands) {
             baskets[r][c] += numOfEffectiveDiagonalPos;
         });
 
-        console.log(`[ROUND FIN] baskets:${JSON.stringify(baskets)}`);
-
         // 바구니에 저장된 물의 양이 2 이상인 모든 칸에 구름이 생기고, 물의 양이 2 줄어든다. 이때 구름이 생기는 칸은 3에서 구름이 사라진 칸이 아니어야 한다.
         for (let r = 0; r < N; r++) {
             for (let c = 0; c < N; c++) {
@@ -269,6 +311,8 @@ function magicSharkRain(N, M, baskets, commands) {
                 }
             }
         }
+
+        console.log(`[ROUND FIN] baskets:${JSON.stringify(baskets)}`);
     }
 
     const totalWater = baskets.reduce(
@@ -280,10 +324,8 @@ function magicSharkRain(N, M, baskets, commands) {
 }
 
 function bojRun() {
-    const input = require("fs")
-        .readFileSync("/dev/stdin")
-        .toString()
-        .split("\n");
+    const fs = require("fs");
+    const input = fs.readFileSync(0, "utf-8").trim().split("\n");
 
     const [N, M] = input[0].split(" ").map(Number);
     const baskets = [];
