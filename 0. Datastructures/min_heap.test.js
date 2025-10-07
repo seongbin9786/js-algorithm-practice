@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { MinHeap } from "./min_heap";
+import { MinHeapShort as MinHeap } from "./min_heap_short";
 
 const basicTestCases = [
     {
