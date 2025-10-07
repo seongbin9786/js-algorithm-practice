@@ -59,25 +59,6 @@ describe("경주로 건설 (Lv.3)", () => {
         ],
         [
             [
-                [0, 0, 0],
-                [0, 1, 0],
-                [0, 0, 0],
-            ],
-            900,
-        ],
-        [
-            [
-                // (2,2)에 도착 후 (4,4)에 도착하는 경로. 진입각에 따라 다르다고?
-                [0, 0, 0, 1, 1],
-                [0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [1, 0, 0, 1, 0],
-                [1, 0, 0, 0, 0],
-            ],
-            1800,
-        ],
-        [
-            [
                 [0, 0, 1, 0, 0], // down +100
                 [0, 0, 0, 0, 0], // right,right,right,right +600+100+100+100
                 [0, 1, 0, 1, 0], // down +100
@@ -86,20 +67,22 @@ describe("경주로 건설 (Lv.3)", () => {
             ],
             1800,
         ],
+        // TC 25 타겟팅 TC들 - 다른 사람들 QnA 출처 - (dir 고려가 없으면 틀리는 TC들) https://school.programmers.co.kr/questions/83745
         [
             [
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 1, 1, 1, 0],
-                [1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [1, 1, 1, 1, 1, 1, 1, 0],
-                [1, 1, 1, 1, 1, 1, 1, 0],
+                // 1. 오른쪽으로 시작하는 경우: r,r,r,r,d,d,l,d,(d,r) 100+100+100+100+600+100+600+600=2300 (3,3)에서 끝까지 +700 = 3000
+                // 2. 아래쪽으로 시작하는 경우: d,d,r,d,r,r,(d,r) 100+100+600+600+600+100=2100 (3,3)에서 끝까지 + 1200 = 3300
+                // (3,3)에서 만나게 됨
+                //
+                [0, 0, 0, 0, 0],
+                [0, 1, 1, 1, 0],
+                [0, 0, 1, 0, 0],
+                [1, 0, 0, 0, 1],
+                [1, 1, 1, 0, 0],
             ],
-            1900,
+            3000,
         ],
-        // 프로그래머스 TC
+        // // 프로그래머스 TC
         [
             [
                 [0, 0, 0],
@@ -152,71 +135,54 @@ function solution(board) {
     const dx = [0, 0, -1, 1];
     const dy = [1, -1, 0, 0]; // 남,북,좌,우
     const N = board.length;
-    const dist = Array.from({ length: N }, () => Array(N).fill(Infinity));
     const heap = new MinHeapShort((a, b) => a[2] - b[2]); // distance
 
-    // dijkstra
-    dist[0][0] = 0;
+    // [y][x]에 대한 dist만 구분하면 아래와 같은 문제가 있음
+    // [반례] (3,3) -> (4,4)로 이동할 때 [아래->오른] 경로만 사용 가능한 경우,
+    //       (3,3)에 (오른)으로 도착했더라도 이후 비용이 700 vs 1200 으로,
+    //       (3,3) 도달 당시 500원 이상 더 저렴하게 오지 않았다면 최단 경로가 아니게 됨
+    // 때문에 모든 edge의 개수를 4배로 증가시키더라도(dir) 모두 체크해야 함
+    // 이를 위해서는 dist[y][x]를 dir 단위로 구분해야 하며, 이는 1차원 늘리는 것으로 쉽게 해결 가능
+    // 다익스트라 알고리즘에 영향을 주는 문제는 아니고, edge를 늘리는 문제임.
+    // 따라서 방문 자체는 dir와 무관하게 distance 순서로 방문하며, 최종 단계에서는 dist[y][x]만 봐도 무관함
+    const dist = Array.from({ length: N }, () =>
+        Array.from({ length: N }, () => Array(N).fill(Infinity))
+    );
+
     if (board[0][1] === 0) {
-        dist[0][1] = 100;
+        dist[0][1][3] = 100;
         heap.push([0, 1, 100, 3]);
     }
     if (board[1][0] === 0) {
-        dist[1][0] = 100;
+        dist[1][0][0] = 100;
         heap.push([1, 0, 100, 0]);
     }
-
-    let minCost = Infinity;
 
     while (!heap.isEmpty()) {
         const [y, x, distance, prevDir] = heap.pop();
         if (distance > dist[y][x]) continue;
-
+        // 무슨 방향으로 오든 처음 도달하면 최단 비용 경로
         if (y === N - 1 && x === N - 1) {
-            minCost = Math.min(minCost, distance);
+            return distance;
         }
-
-        console.log(
-            `[pop] (${y},${x}), distance: ${distance}, prevDir: ${prevDir}`
-        );
 
         for (let dir = 0; dir < 4; dir++) {
             const nx = x + dx[dir];
             const ny = y + dy[dir];
 
-            if (
-                // 되돌아가는 것 방지
-                !(
-                    (dir === 1 && prevDir === 0) ||
-                    (dir === 0 && prevDir === 1) ||
-                    (dir === 2 && prevDir === 3) ||
-                    (dir === 3 && prevDir === 2)
-                ) &&
-                nx >= 0 &&
-                nx < N &&
-                ny >= 0 &&
-                ny < N &&
-                board[ny][nx] === 0
-            ) {
-                // 직전의 방향을 알아야 함.
+            if (nx >= 0 && nx < N && ny >= 0 && ny < N && board[ny][nx] === 0) {
                 const ndist = distance + (dir === prevDir ? 100 : 600);
-                console.log(
-                    `[push] (${y},${x} => ${ny},${nx}), prevDir:${prevDir} -> dir:${dir}, ndist: ${ndist}`
-                );
-                console.log(`heap: ${JSON.stringify(heap.arr)}`);
-                // 다른 방향으로 들어왔을 때 같은 값일 수 있음
-                if (ndist > dist[ny][nx]) continue;
-                dist[ny][nx] = ndist;
+                if (ndist >= dist[ny][nx][dir]) continue;
+                console.log(`pushing ${ny},${nx},${dir} (dist=${ndist})`);
+                dist[ny][nx][dir] = ndist;
                 heap.push([ny, nx, ndist, dir]);
             }
         }
     }
-
-    return minCost;
 }
 
 // 그대로 가져옴
-export function MinHeapShort(_comp) {
+function MinHeapShort(_comp) {
     const f = Math.floor;
     const arr = [undefined];
     const comp = _comp ?? ((a, b) => a - b);
@@ -261,6 +227,5 @@ export function MinHeapShort(_comp) {
         isEmpty,
         push,
         pop,
-        arr,
     };
 }
