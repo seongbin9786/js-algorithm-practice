@@ -19,6 +19,8 @@ export function MinHeapShort(_comp) {
     const pop = () => {
         if (arr.length === 1) return;
         const minVal = arr[1];
+
+        // NOTE: 주의<!> length=1일 때는 바로 반환해야 함.
         const last = arr.pop();
         if (arr.length === 1) return minVal;
         arr[1] = last;
