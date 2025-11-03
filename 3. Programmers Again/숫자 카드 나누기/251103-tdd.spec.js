@@ -1,12 +1,14 @@
 /*
 [문제 해석]
-- 최소한의 객실로 예약 내역을 처리하려고 함
-- 퇴실 후 10분 간 청소 시간 있음
-- 최소한의 객실 개수를 반환
+- 두 배열을 받아 한 쪽에선 최대공약수, 한 쪽에선 아예 나눠지지 않는 숫자 중 최대를 반환
 
 [발상]
-- 1분 단위로 1440회(24시간을 1분 단위로) 루프하며 예약 내역을 순회
-- [startTime, endTime]에 대해 매번 순회 vs 모든 분에 대해 채우기 (둘 다 똑같은 수준)
+- 단순한 약수 구하기, 체크 문제인데, 시간 제한이 빡센 문제 (근데 다른 풀이들 보니, 막상 채점은 헐렁하게 하는 것 같음)
+
+[개선점]
+- min 값 구하기 O(N)에 하려고 직접 구현헀는데, 어차피 한 값에 대해서만 하는 거라 O(N log N)으로 해도 괜찮음
+- 약수 구하기 역시 한 숫자에 대해서만 하는 것이므로 굳이 최적화 필요 없음
+
 */
 import { describe, it, assert } from "vitest";
 
@@ -26,37 +28,16 @@ function solution(arrayA, arrayB) {
 }
 
 function findAnswer(arrayA, arrayB) {
-    const minA = findMin(arrayA);
+    const minA = arrayA.sort((a, b) => a - b)[0];
     const divisors = findDivisors(minA);
 
-    for (const divisor of divisors) {
-        let i;
-        for (i = 0; i < arrayA.length; i++) {
-            const target = arrayA[i];
-            if (target % divisor > 0) {
-                break;
-            }
-        }
-
-        if (i < arrayA.length) {
-            continue;
-        }
-
-        for (i = 0; i < arrayB.length; i++) {
-            const target = arrayB[i];
-            if (target % divisor === 0) {
-                break;
-            }
-        }
-
-        if (i < arrayA.length) {
-            continue;
-        }
-
-        return divisor;
-    }
-
-    return 0;
+    return (
+        divisors.find(
+            (divisor) =>
+                arrayA.every((target) => target % divisor === 0) &&
+                arrayB.every((target) => target % divisor > 0)
+        ) || 0
+    );
 }
 
 // 내림차순이면 통과되자마자 리턴하면 되니 더 효율적일 듯
@@ -75,13 +56,4 @@ function findDivisors(num) {
 
     // 숫자 개수가 적어서 sort 사용 (1억일 때 81개)
     return divisors.sort((a, b) => b - a);
-}
-
-function findMin(arr) {
-    let min = arr[0];
-    for (let i = 1; i < arr.length; i++) {
-        min = Math.min(min, arr[i]);
-    }
-
-    return min;
 }
