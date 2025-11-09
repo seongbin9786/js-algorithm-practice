@@ -74,4 +74,4 @@ function bojRun() {
     });
 }
 
-bojRun();
+// bojRun();
